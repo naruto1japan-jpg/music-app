@@ -77,6 +77,8 @@ export default function Admin() {
   const [audioFile, setAudioFile] = React.useState<File | null>(null);
   const [coverPreview, setCoverPreview] = React.useState<string>("");
   const [isSearchingGaana, setIsSearchingGaana] = React.useState(false);
+  const coverInputRef = React.useRef<HTMLInputElement>(null);
+  const audioInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -202,37 +204,51 @@ export default function Admin() {
       return;
     }
 
-    const newTrack: Track = {
-      id: Date.now().toString(),
-      title: formData.title,
-      artist: formData.artist,
-      album: formData.album,
-      genre: formData.genre,
-      duration: parseInt(formData.duration, 10),
-      coverFile: coverFile,
-      audioFile: audioFile,
-      featured: false,
-    };
+    try {
+      const newTrack: Track = {
+        id: Date.now().toString(),
+        title: formData.title,
+        artist: formData.artist,
+        album: formData.album,
+        genre: formData.genre,
+        duration: parseInt(formData.duration, 10),
+        coverFile: coverFile,
+        audioFile: audioFile,
+        featured: false,
+      };
 
-    console.log('Adding new track with audio file:', audioFile.name, audioFile.type);
-    await addTrack(newTrack);
-    
-    setFormData({
-      title: "",
-      artist: "",
-      album: "",
-      genre: "Pop",
-      duration: "",
-      gaanaSearch: "",
-    });
-    setCoverFile(null);
-    setAudioFile(null);
-    setCoverPreview("");
+      console.log('Adding new track with audio file:', audioFile.name, audioFile.type);
+      await addTrack(newTrack);
+      
+      // Clear form after successful save
+      setFormData({
+        title: "",
+        artist: "",
+        album: "",
+        genre: "Pop",
+        duration: "",
+        gaanaSearch: "",
+      });
+      setCoverFile(null);
+      setAudioFile(null);
+      setCoverPreview("");
+      
+      // Reset file inputs
+      if (coverInputRef.current) coverInputRef.current.value = "";
+      if (audioInputRef.current) audioInputRef.current.value = "";
 
-    toast({
-      title: "Success",
-      description: "Music track added successfully",
-    });
+      toast({
+        title: "Success",
+        description: "Music track added successfully",
+      });
+    } catch (error) {
+      console.error('Failed to add track:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add track. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -376,6 +392,7 @@ export default function Admin() {
                 </label>
                 <div className={styles.fileInputWrapper}>
                   <input
+                    ref={coverInputRef}
                     type="file"
                     id="coverFile"
                     accept="image/*"
@@ -399,6 +416,7 @@ export default function Admin() {
                 </label>
                 <div className={styles.fileInputWrapper}>
                   <input
+                    ref={audioInputRef}
                     type="file"
                     id="audioFile"
                     accept="audio/*"
