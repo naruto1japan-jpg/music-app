@@ -20,8 +20,7 @@ const YT_STATES = {
   CUED: 5,
 };
 
-// Module-level variable to track if audio has been unlocked
-let audioUnlocked = false;
+// Remove module-level audio unlock tracking - show prompt for each new song
 
 let mediaSession: MediaSession | null = null;
 
@@ -36,6 +35,11 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
   const timeUpdateIntervalRef = React.useRef<number | null>(null);
   const keepAliveIntervalRef = React.useRef<number | null>(null);
   const [showUnlockPrompt, setShowUnlockPrompt] = React.useState(true);
+
+  // Reset the unlock prompt whenever videoId changes (new song)
+  React.useEffect(() => {
+    setShowUnlockPrompt(true);
+  }, [videoId]);
 
   const videoInfoRef = React.useRef<{ title: string; artist: string; thumbnail: string } | null>(null);
   const retryCountRef = React.useRef(0);
@@ -288,8 +292,7 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
       playerRef.current.unMute();
       playerRef.current.setVolume(100);
       setShowUnlockPrompt(false);
-      audioUnlocked = true;
-      console.log('Audio unlocked');
+      console.log('Audio unlocked for current track');
     }
   };
 
