@@ -20,6 +20,7 @@ export interface GaanaSearchResult {
 }
 
 const GAANA_API_BASE = 'https://api.gaana.com';
+const GAANA_API_KEY = import.meta.env.VITE_GAANA_API_KEY || '';
 
 /**
  * Search for tracks on Gaana
@@ -27,7 +28,7 @@ const GAANA_API_BASE = 'https://api.gaana.com';
 export async function searchGaanaTracks(query: string, limit = 20): Promise<GaanaSearchResult> {
   try {
     const response = await fetch(
-      `${GAANA_API_BASE}/search.php?key=${encodeURIComponent(query)}&limit=${limit}`
+      `${GAANA_API_BASE}/search.php?key=${encodeURIComponent(query)}&limit=${limit}&api_key=${GAANA_API_KEY}`
     );
     
     if (!response.ok) {
@@ -51,7 +52,7 @@ export async function searchGaanaTracks(query: string, limit = 20): Promise<Gaan
  */
 export async function getGaanaTrack(trackId: string): Promise<GaanaTrack | null> {
   try {
-    const response = await fetch(`${GAANA_API_BASE}/track.php?seokey=${trackId}`);
+    const response = await fetch(`${GAANA_API_BASE}/track.php?seokey=${trackId}&api_key=${GAANA_API_KEY}`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch track');
