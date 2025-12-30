@@ -341,10 +341,20 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           console.log('Playing audio from:', audioUrl.substring(0, 50) + '...');
           audioRef.current.src = audioUrl;
           try {
-            await audioRef.current.play();
-            console.log('Audio playback started successfully');
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              await playPromise;
+              console.log('Audio playback started successfully');
+            }
           } catch (err) {
-            console.error('Playback error:', err);
+            console.error('Playback error (likely autoplay restriction):', err);
+            // Show user notification that they need to interact
+            alert('Click OK to start playback');
+            try {
+              await audioRef.current.play();
+            } catch (retryErr) {
+              console.error('Retry failed:', retryErr);
+            }
           }
         } else {
           console.error('No audio URL available for track:', track.title);
