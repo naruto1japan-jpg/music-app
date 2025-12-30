@@ -44,6 +44,7 @@ interface SerializedTrack {
 const MusicContext = React.createContext<MusicContextType | null>(null);
 
 const STORAGE_KEY = 'harmony-flow-tracks';
+const DELETED_TRACKS_KEY = 'harmony-flow-deleted-tracks';
 // Pre-populate mock track IDs at module level
 const MOCK_TRACK_IDS = new Set<string>(mockTracks.map(t => t.id));
 
@@ -56,6 +57,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     'radial-gradient(circle at 20% 50%, rgba(147, 51, 234, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.4) 0%, transparent 50%)'
   );
   const [tracks, setTracks] = React.useState<Track[]>([]);
+  const [deletedTrackIds, setDeletedTrackIds] = React.useState<Set<string>>(new Set());
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
@@ -94,10 +96,16 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Load tracks from localStorage on mount
+  // Load tracks and deleted track IDs from localStorage on mount
   React.useEffect(() => {
     const loadTracks = async () => {
       try {
+        // Load deleted track IDs
+        const deletedIds = localStorage.getItem(DELETED_TRACKS_KEY);
+        const deletedSet = new Set<string>(deletedIds ? JSON.parse(deletedIds) : []);
+        setDeletedTrackIds(deletedSet);
+        console.log('Loaded deleted track IDs:', Array.from(deletedSet));
+
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           console.log('Loading tracks from localStorage...');
@@ -129,11 +137,17 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
             })
           );
           console.log('Loaded', deserializedTracks.length, 'user tracks');
-          // User tracks first, then mock tracks (so user tracks appear at the top)
-          setTracks([...deserializedTracks, ...mockTracks]);
+          
+          // Filter out deleted mock tracks
+          const activeMockTracks = mockTracks.filter(t => !deletedSet.has(t.id));
+          console.log('Active mock tracks:', activeMockTracks.length, '(', mockTracks.length - activeMockTracks.length, 'deleted)');
+          
+          // User tracks first, then non-deleted mock tracks
+          setTracks([...deserializedTracks, ...activeMockTracks]);
         } else {
           console.log('No stored tracks found, using mock tracks only');
-          setTracks([...mockTracks]);
+          const activeMockTracks = mockTracks.filter(t => !deletedSet.has(t.id));
+          setTracks([...activeMockTracks]);
         }
       } catch (error) {
         console.error('Failed to load tracks from storage:', error);
@@ -283,7 +297,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteTrack = React.useCallback((id: string) => {
-    console.log('Deleting track:', id, 'Is mock track:', MOCK_TRACK_IDS.has(id));
+    const isMockTrack = MOCK_TRACK_IDS.has(id);
+    console.log('Deleting track:', id, 'Is mock track:', isMockTrack);
     
     // If deleting current track, stop playback
     if (currentTrack?.id === id) {
@@ -293,6 +308,18 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         audioRef.current.pause();
         audioRef.current.src = '';
       }
+    }
+    
+    // If it's a mock track, add to deleted IDs
+    if (isMockTrack) {
+      setDeletedTrackIds(prev => {
+        const newSet = new Set(prev);
+        newSet.add(id);
+        // Save deleted IDs to localStorage
+        localStorage.setItem(DELETED_TRACKS_KEY, JSON.stringify(Array.from(newSet)));
+        console.log('Added to deleted IDs:', id);
+        return newSet;
+      });
     }
     
     setTracks((prev) => {
