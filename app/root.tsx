@@ -17,6 +17,7 @@ import "./styles/tokens/typography.css";
 import "./styles/theme.css";
 import { useColorScheme } from "@dazl/color-scheme/react";
 import favicon from "/favicon.svg";
+import { usePerformanceOptimizer } from "./hooks/use-performance-optimizer";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -66,6 +67,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Initialize performance optimizer for device-specific optimizations
+  const { deviceInfo, settings } = usePerformanceOptimizer();
+
   // Register service worker for background audio support
   React.useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -79,6 +83,17 @@ export default function App() {
         });
     }
   }, []);
+
+  // Log performance info
+  React.useEffect(() => {
+    console.log('Performance Optimization Active:', {
+      device: `${deviceInfo.manufacturer} ${deviceInfo.model}`,
+      refreshRate: `${deviceInfo.refreshRate}Hz`,
+      gpuTier: deviceInfo.gpuTier,
+      maxFPS: settings.maxFPS,
+      animationDuration: settings.animationDuration,
+    });
+  }, [deviceInfo, settings]);
 
   return (
     <MusicProvider>
