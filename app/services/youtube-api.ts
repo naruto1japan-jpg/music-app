@@ -22,6 +22,13 @@ export interface YouTubeSearchResult {
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || '';
 
+// Log API key status (without exposing the actual key)
+if (!YOUTUBE_API_KEY) {
+  console.warn('YouTube API key is missing. Set VITE_YOUTUBE_API_KEY in your .env file');
+} else {
+  console.log('YouTube API key loaded successfully');
+}
+
 /**
  * Parse duration from ISO 8601 format (PT1M30S) to seconds
  */
@@ -117,9 +124,19 @@ export async function searchYouTube(
     const searchResponse = await fetch(`${YOUTUBE_API_BASE}/search?${searchParams}`);
     
     if (!searchResponse.ok) {
-      const error = await searchResponse.json();
-      console.error('YouTube search error:', error);
-      throw new Error(error.error?.message || 'Failed to search YouTube');
+      const errorText = await searchResponse.text();
+      console.error('YouTube API Error:', {
+        status: searchResponse.status,
+        statusText: searchResponse.statusText,
+        body: errorText
+      });
+      
+      try {
+        const error = JSON.parse(errorText);
+        throw new Error(error.error?.message || 'Failed to search YouTube');
+      } catch (e) {
+        throw new Error(`YouTube API request failed: ${searchResponse.status} ${searchResponse.statusText}`);
+      }
     }
 
     const searchData = await searchResponse.json();

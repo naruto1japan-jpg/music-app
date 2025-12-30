@@ -27,6 +27,7 @@ export default function Search() {
   const [localResults, setLocalResults] = React.useState(userTracks);
   const [onlineResults, setOnlineResults] = React.useState<Track[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
+  const [searchError, setSearchError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setLocalResults(userTracks);
@@ -55,10 +56,12 @@ export default function Search() {
   const handleOnlineSearch = async () => {
     if (!searchQuery.trim()) {
       setOnlineResults([]);
+      setSearchError(null);
       return;
     }
 
     setIsSearching(true);
+    setSearchError(null);
     try {
       const result = await searchYouTube(searchQuery);
       
@@ -75,8 +78,13 @@ export default function Search() {
       }));
       
       setOnlineResults(tracks);
+      
+      if (tracks.length === 0) {
+        setSearchError('No results found. Try a different search term.');
+      }
     } catch (error) {
       console.error('Online search failed:', error);
+      setSearchError(error instanceof Error ? error.message : 'Search failed. Please try again.');
       setOnlineResults([]);
     } finally {
       setIsSearching(false);
@@ -200,10 +208,10 @@ export default function Search() {
             <div className={styles.emptyState}>
               <Music2 className={styles.emptyIcon} size={64} />
               <h3 className={styles.emptyTitle}>
-                {isSearching ? 'Searching...' : 'No results found'}
+                {isSearching ? 'Searching...' : searchError ? 'Search Error' : 'No results found'}
               </h3>
               <p className={styles.emptyText}>
-                {activeTab === "online" 
+                {searchError ? searchError : activeTab === "online" 
                   ? "Try searching for your favorite songs, artists, or albums on YouTube." 
                   : "Try a different search term or browse categories."}
               </p>
