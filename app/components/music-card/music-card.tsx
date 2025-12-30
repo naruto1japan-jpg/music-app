@@ -1,5 +1,6 @@
 import React from "react";
 import { Play, ListPlus } from "lucide-react";
+import { useNavigate } from "react-router";
 import type { Track } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
 import styles from "./music-card.module.css";
@@ -18,6 +19,7 @@ function formatDuration(seconds: number): string {
 
 export function MusicCard({ track, className }: MusicCardProps) {
   const { playTrack, addToQueue } = useMusic();
+  const navigate = useNavigate();
   const [coverUrl, setCoverUrl] = React.useState<string>('');
 
   React.useEffect(() => {
@@ -38,6 +40,7 @@ export function MusicCard({ track, className }: MusicCardProps) {
       console.log('Audio URL type:', track.audioUrl.substring(0, 20));
     }
     playTrack(track);
+    navigate('/player');
   };
 
   const handleAddToQueue = (e: React.MouseEvent) => {

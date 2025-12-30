@@ -11,6 +11,7 @@ interface MusicContextType {
   pauseTrack: () => void;
   resumeTrack: () => void;
   togglePlayPause: () => void;
+  playPause: () => void;
   nextTrack: () => void;
   previousTrack: () => void;
   toggleRepeat: () => void;
@@ -26,6 +27,7 @@ interface MusicContextType {
   duration: number;
   seek: (time: number) => void;
   queue: Track[];
+  currentIndex: number;
   addToQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
   clearQueue: () => void;
@@ -653,6 +655,11 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     youtubePlayerRef.current = player;
   }, []);
 
+  const currentIndex = React.useMemo(() => {
+    if (!currentTrack) return -1;
+    return queue.findIndex(t => t.id === currentTrack.id);
+  }, [currentTrack, queue]);
+
   const value = React.useMemo(
     () => ({
       currentTrack,
@@ -661,6 +668,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       pauseTrack,
       resumeTrack,
       togglePlayPause,
+      playPause: togglePlayPause,
       nextTrack,
       previousTrack,
       toggleRepeat,
@@ -676,6 +684,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       duration,
       seek,
       queue,
+      currentIndex,
       addToQueue,
       removeFromQueue,
       clearQueue,
@@ -685,7 +694,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       autoQueue,
       toggleAutoQueue,
     }),
-    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode, lastPlayed, autoQueue, toggleAutoQueue],
+    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, currentIndex, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode, lastPlayed, autoQueue, toggleAutoQueue],
   );
 
   return (
