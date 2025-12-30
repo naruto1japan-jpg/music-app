@@ -304,3 +304,49 @@ export function getYouTubeEmbedUrl(videoId: string): string {
 export function getYouTubeVideoUrl(videoId: string): string {
   return `https://www.youtube.com/watch?v=${videoId}`;
 }
+
+/**
+ * Get YouTube search suggestions
+ * Uses YouTube's suggestion API (JSONP endpoint)
+ */
+export async function getYouTubeSuggestions(query: string): Promise<string[]> {
+  if (!query.trim()) {
+    return [];
+  }
+
+  try {
+    // YouTube suggestion API endpoint
+    const url = `https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(query)}`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.warn('Failed to fetch suggestions:', response.status);
+      return [];
+    }
+
+    const text = await response.text();
+    
+    // The response is JSONP format, we need to extract the JSON array
+    // Format: window.google.ac.h(query, [suggestions])
+    const match = text.match(/\[.*\]/);
+    if (!match) {
+      return [];
+    }
+
+    const data = JSON.parse(match[0]);
+    
+    // The suggestions are in data[1], each suggestion is an array where [0] is the text
+    if (!data[1] || !Array.isArray(data[1])) {
+      return [];
+    }
+
+    return data[1]
+      .map((item: any) => item[0])
+      .filter((suggestion: string) => suggestion && typeof suggestion === 'string')
+      .slice(0, 8); // Limit to 8 suggestions
+  } catch (error) {
+    console.error('Error fetching YouTube suggestions:', error);
+    return [];
+  }
+}

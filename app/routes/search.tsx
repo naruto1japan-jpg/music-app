@@ -6,7 +6,7 @@ import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
 import { GENRES, type Genre, type Track } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
-import { searchYouTube, type YouTubeTrack } from "~/services/youtube-api";
+import { searchYouTube, getYouTubeSuggestions, type YouTubeTrack } from "~/services/youtube-api";
 import styles from "./search.module.css";
 
 export function meta({}: Route.MetaArgs) {
@@ -28,6 +28,11 @@ export default function Search() {
   const [onlineResults, setOnlineResults] = React.useState<Track[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
   const [searchError, setSearchError] = React.useState<string | null>(null);
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const [suggestionIndex, setSuggestionIndex] = React.useState(-1);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const suggestionsRef = React.useRef<HTMLDivElement>(null);
 
   // Debug: Check if API key is loaded
   React.useEffect(() => {
@@ -119,9 +124,77 @@ export default function Search() {
     }
   };
 
+  // Debounced search suggestions
+  React.useEffect(() => {
+    if (activeTab !== "online" || !searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const results = await getYouTubeSuggestions(searchQuery);
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+      } catch (error) {
+        console.error('Failed to fetch suggestions:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeTab]);
+
+  // Close suggestions when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchQuery(suggestion);
+    setShowSuggestions(false);
+    setSuggestionIndex(-1);
+    // Automatically search after selecting suggestion
+    setTimeout(() => {
+      if (activeTab === "online") {
+        handleOnlineSearch();
+      } else {
+        handleLocalSearch();
+      }
+    }, 100);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSearch();
+      if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+        handleSuggestionClick(suggestions[suggestionIndex]);
+      } else {
+        setShowSuggestions(false);
+        handleSearch();
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSuggestionIndex((prev) => 
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSuggestionIndex((prev) => (prev > -1 ? prev - 1 : -1));
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setSuggestionIndex(-1);
     }
   };
 
@@ -156,14 +229,41 @@ export default function Search() {
 
         <div className={styles.searchSection}>
           <div className={styles.searchBar}>
-            <input
-              type="text"
-              className={styles.searchInput}
-              placeholder={activeTab === "local" ? "Search your library..." : "Search YouTube music..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
-            />
+            <div className={styles.searchInputWrapper}>
+              <input
+                ref={searchInputRef}
+                type="text"
+                className={styles.searchInput}
+                placeholder={activeTab === "local" ? "Search your library..." : "Search YouTube music..."}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSuggestionIndex(-1);
+                }}
+                onKeyDown={handleKeyPress}
+                onFocus={() => {
+                  if (suggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div ref={suggestionsRef} className={styles.suggestions}>
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      className={styles.suggestionItem}
+                      data-active={index === suggestionIndex}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      onMouseEnter={() => setSuggestionIndex(index)}
+                    >
+                      <SearchIcon className={styles.suggestionIcon} size={16} />
+                      <span className={styles.suggestionText}>{suggestion}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button 
               className={styles.searchButton} 
               onClick={handleSearch}
