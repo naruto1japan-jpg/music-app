@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronUp, ChevronDown, ListMusic, Car, X } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronUp, ChevronDown, ListMusic, Car, X, Sparkles } from "lucide-react";
 import { useMusic } from "~/contexts/music-context";
 import { extractColorsFromImage, type DominantColors } from "~/utils/color-extractor";
 import styles from "./mini-player.module.css";
@@ -22,7 +22,9 @@ export function MiniPlayer() {
     removeFromQueue,
     clearQueue,
     isDrivingMode,
-    toggleDrivingMode
+    toggleDrivingMode,
+    autoQueue,
+    toggleAutoQueue
   } = useMusic();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [coverUrl, setCoverUrl] = React.useState<string>('');
@@ -191,6 +193,14 @@ export function MiniPlayer() {
                   <span className={styles.totalTime}>{formatTime(duration)}</span>
                 </div>
                 <div className={styles.toggleControls}>
+                  <button 
+                    className={`${styles.toggleButton} ${autoQueue ? styles.active : ''}`}
+                    onClick={toggleAutoQueue}
+                    aria-label="Toggle auto queue"
+                    title={autoQueue ? "Auto-Queue: ON (Smart recommendations)" : "Auto-Queue: OFF (Manual queue)"}
+                  >
+                    <Sparkles size={20} />
+                  </button>
                   <button 
                     className={`${styles.toggleButton} ${isShuffle ? styles.active : ''}`}
                     onClick={toggleShuffle}

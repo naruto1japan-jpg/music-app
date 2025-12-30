@@ -32,6 +32,8 @@ interface MusicContextType {
   isDrivingMode: boolean;
   toggleDrivingMode: () => void;
   lastPlayed: Track[];
+  autoQueue: boolean;
+  toggleAutoQueue: () => void;
 }
 
 interface SerializedTrack {
@@ -54,6 +56,7 @@ const MusicContext = React.createContext<MusicContextType | null>(null);
 const STORAGE_KEY = 'harmony-flow-tracks';
 const DELETED_TRACKS_KEY = 'harmony-flow-deleted-tracks';
 const LAST_PLAYED_KEY = 'harmony-flow-last-played';
+const AUTO_QUEUE_KEY = 'harmony-flow-auto-queue';
 // Pre-populate mock track IDs at module level
 const MOCK_TRACK_IDS = new Set<string>(mockTracks.map(t => t.id));
 
@@ -76,6 +79,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [queue, setQueue] = React.useState<Track[]>([]);
   const [isDrivingMode, setIsDrivingMode] = React.useState(false);
   const [lastPlayed, setLastPlayed] = React.useState<Track[]>([]);
+  const [autoQueue, setAutoQueue] = React.useState(true);
+  const genrePreferenceRef = React.useRef<Map<string, number>>(new Map());
 
   // Initialize audio element
   React.useEffect(() => {
@@ -143,6 +148,19 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
             })
           );
           setLastPlayed(deserializedLastPlayed);
+          
+          // Build genre preference from last played
+          deserializedLastPlayed.forEach((track, index) => {
+            const weight = deserializedLastPlayed.length - index; // Recent = higher weight
+            const currentWeight = genrePreferenceRef.current.get(track.genre) || 0;
+            genrePreferenceRef.current.set(track.genre, currentWeight + weight);
+          });
+        }
+        
+        // Load auto queue preference
+        const autoQueueData = localStorage.getItem(AUTO_QUEUE_KEY);
+        if (autoQueueData !== null) {
+          setAutoQueue(JSON.parse(autoQueueData));
         }
 
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -256,10 +274,15 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setIsPlaying(true);
     setCurrentTime(0);
 
-    // Update last played
+    // Update last played and genre preferences
     setLastPlayed(prev => {
       const filtered = prev.filter(t => t.id !== track.id);
       const updated = [track, ...filtered].slice(0, 10); // Keep last 10 tracks
+      
+      // Update genre preferences
+      const currentWeight = genrePreferenceRef.current.get(track.genre) || 0;
+      genrePreferenceRef.current.set(track.genre, currentWeight + 10);
+      
       // Save to localStorage
       const serialized = updated.map(t => ({
         id: t.id,
@@ -419,6 +442,36 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   }, [youtubeVideoId]);
 
+  // Get smart recommendation based on genre preferences
+  const getSmartRecommendation = React.useCallback(() => {
+    if (tracks.length === 0) return null;
+    
+    // Get sorted genres by preference
+    const sortedGenres = Array.from(genrePreferenceRef.current.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([genre]) => genre);
+    
+    // Filter out already played tracks and current track
+    const playedIds = new Set([...lastPlayed.map(t => t.id), currentTrack?.id]);
+    const availableTracks = tracks.filter(t => !playedIds.has(t.id));
+    
+    if (availableTracks.length === 0) {
+      // All tracks played, reset and use all tracks
+      return tracks[Math.floor(Math.random() * tracks.length)];
+    }
+    
+    // Try to find a track from preferred genres
+    for (const genre of sortedGenres) {
+      const genreTracks = availableTracks.filter(t => t.genre === genre);
+      if (genreTracks.length > 0) {
+        return genreTracks[Math.floor(Math.random() * genreTracks.length)];
+      }
+    }
+    
+    // Fallback to random available track
+    return availableTracks[Math.floor(Math.random() * availableTracks.length)];
+  }, [tracks, lastPlayed, currentTrack]);
+
   const nextTrack = React.useCallback(() => {
     // If there's a queue, play from queue first
     if (queue.length > 0) {
@@ -430,6 +483,16 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     
     if (!currentTrack || tracks.length === 0) return;
     
+    // Auto-queue enabled: smart recommendation
+    if (autoQueue) {
+      const recommendation = getSmartRecommendation();
+      if (recommendation) {
+        playTrack(recommendation);
+        return;
+      }
+    }
+    
+    // Manual mode or fallback: sequential/shuffle
     const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
     let nextIndex;
     
@@ -440,7 +503,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
     
     playTrack(tracks[nextIndex]);
-  }, [currentTrack, tracks, isShuffle, playTrack, queue]);
+  }, [currentTrack, tracks, isShuffle, playTrack, queue, autoQueue, getSmartRecommendation]);
 
   const previousTrack = React.useCallback(() => {
     if (!currentTrack || tracks.length === 0) return;
@@ -510,6 +573,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       return newMode;
     });
   }, [tracks, playTrack]);
+
+  const toggleAutoQueue = React.useCallback(() => {
+    setAutoQueue(prev => {
+      const newValue = !prev;
+      localStorage.setItem(AUTO_QUEUE_KEY, JSON.stringify(newValue));
+      return newValue;
+    });
+  }, []);
 
   // Handle regular audio track end
   React.useEffect(() => {
@@ -591,8 +662,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       isDrivingMode,
       toggleDrivingMode,
       lastPlayed,
+      autoQueue,
+      toggleAutoQueue,
     }),
-    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode, lastPlayed],
+    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode, lastPlayed, autoQueue, toggleAutoQueue],
   );
 
   return (
