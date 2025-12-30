@@ -40,7 +40,8 @@ interface SerializedTrack {
 const MusicContext = React.createContext<MusicContextType | null>(null);
 
 const STORAGE_KEY = 'harmony-flow-tracks';
-const MOCK_TRACK_IDS = new Set<string>();
+// Pre-populate mock track IDs at module level
+const MOCK_TRACK_IDS = new Set<string>(mockTracks.map(t => t.id));
 
 export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [currentTrack, setCurrentTrack] = React.useState<Track | null>(null);
@@ -53,11 +54,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [isLoaded, setIsLoaded] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
-
-  // Track mock track IDs on mount
-  React.useEffect(() => {
-    mockTracks.forEach(track => MOCK_TRACK_IDS.add(track.id));
-  }, []);
 
   // Initialize audio element
   React.useEffect(() => {
