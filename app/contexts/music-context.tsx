@@ -64,6 +64,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [duration, setDuration] = React.useState(0);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = React.useState<string | null>(null);
+  const youtubePlayerRef = React.useRef<any>(null);
 
   // Initialize audio element
   React.useEffect(() => {
@@ -354,9 +355,12 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const seek = React.useCallback((time: number) => {
     setCurrentTime(time);
-    if (youtubeVideoId) {
-      // YouTube seeking will be handled by the player component
-      // We'll need to expose a ref to the player for this
+    if (youtubeVideoId && youtubePlayerRef.current) {
+      try {
+        youtubePlayerRef.current.seekTo(time, true);
+      } catch (error) {
+        console.error('Error seeking YouTube player:', error);
+      }
     } else if (audioRef.current) {
       audioRef.current.currentTime = time;
     }
@@ -447,6 +451,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isRepeat, nextTrack]);
 
+  const handleYouTubePlayerReady = React.useCallback((player: any) => {
+    youtubePlayerRef.current = player;
+  }, []);
+
   const value = React.useMemo(
     () => ({
       currentTrack,
@@ -482,6 +490,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           isPlaying={isPlaying}
           onTimeUpdate={handleYouTubeTimeUpdate}
           onStateChange={handleYouTubeStateChange}
+          onPlayerReady={handleYouTubePlayerReady}
         />
       )}
     </MusicContext.Provider>

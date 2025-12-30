@@ -7,6 +7,7 @@ interface YouTubePlayerProps {
   onReady?: () => void;
   onStateChange?: (state: number) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
+  onPlayerReady?: (player: any) => void;
 }
 
 // YouTube IFrame Player API states
@@ -21,7 +22,7 @@ const YT_STATES = {
 
 let audioUnlocked = false;
 
-export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTimeUpdate }: YouTubePlayerProps) {
+export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTimeUpdate, onPlayerReady }: YouTubePlayerProps) {
   const playerRef = React.useRef<any>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const timeUpdateIntervalRef = React.useRef<number | null>(null);
@@ -69,6 +70,7 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
         events: {
           onReady: (event: any) => {
             console.log('YouTube player ready');
+            onPlayerReady?.(event.target);
             onReady?.();
           },
           onStateChange: (event: any) => {
@@ -137,11 +139,6 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
         playerRef.current.setVolume(100);
         audioUnlocked = true;
         setShowUnlock(false);
-        
-        // Resume playback if it was playing
-        if (isPlaying) {
-          playerRef.current.playVideo();
-        }
       } catch (error) {
         console.error('Error unlocking audio:', error);
       }
