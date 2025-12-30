@@ -1,11 +1,11 @@
 import React from "react";
 import type { Route } from "./+types/admin";
-import { Settings, Plus, Edit, Trash2, Upload, Music } from "lucide-react";
+import { Settings, Plus, Edit, Trash2, Upload } from "lucide-react";
 import { Header } from "~/components/header/header";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { GENRES, type Track } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
-import { searchGaanaTracks } from "~/services/gaana-api";
+
 import { useToast } from "~/hooks/use-toast";
 import styles from "./admin.module.css";
 
@@ -71,12 +71,11 @@ export default function Admin() {
     album: "",
     genre: "Pop",
     duration: "",
-    gaanaSearch: "",
   });
   const [coverFile, setCoverFile] = React.useState<File | null>(null);
   const [audioFile, setAudioFile] = React.useState<File | null>(null);
   const [coverPreview, setCoverPreview] = React.useState<string>("");
-  const [isSearchingGaana, setIsSearchingGaana] = React.useState(false);
+  const [isSearchingYouTube, setIsSearchingYouTube] = React.useState(false);
   const coverInputRef = React.useRef<HTMLInputElement>(null);
   const audioInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -116,63 +115,7 @@ export default function Admin() {
     }
   };
 
-  const handleGaanaSearch = async () => {
-    if (!formData.gaanaSearch.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a search query",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    setIsSearchingGaana(true);
-    try {
-      const results = await searchGaanaTracks(formData.gaanaSearch, 1);
-      if (results.tracks.length > 0) {
-        const gaanaTrack = results.tracks[0];
-        setFormData((prev) => ({
-          ...prev,
-          title: gaanaTrack.title,
-          artist: gaanaTrack.artist,
-          album: gaanaTrack.album,
-          duration: gaanaTrack.duration.toString(),
-        }));
-        
-        // Download and set cover art
-        if (gaanaTrack.artwork) {
-          try {
-            const response = await fetch(gaanaTrack.artwork);
-            const blob = await response.blob();
-            const file = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
-            setCoverFile(file);
-            setCoverPreview(gaanaTrack.artwork);
-          } catch (err) {
-            console.error('Failed to download cover art:', err);
-          }
-        }
-
-        toast({
-          title: "Success",
-          description: "Track details loaded from Gaana",
-        });
-      } else {
-        toast({
-          title: "Not Found",
-          description: "No results found on Gaana",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to search Gaana",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearchingGaana(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,7 +170,6 @@ export default function Admin() {
         album: "",
         genre: "Pop",
         duration: "",
-        gaanaSearch: "",
       });
       setCoverFile(null);
       setAudioFile(null);
@@ -275,31 +217,6 @@ export default function Admin() {
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Add New Music</h3>
             
-            <div className={styles.gaanaSection}>
-              <h4 className={styles.gaanaTitle}>
-                <Music size={20} />
-                Search on Gaana
-              </h4>
-              <div className={styles.gaanaSearch}>
-                <input
-                  type="text"
-                  name="gaanaSearch"
-                  className={styles.input}
-                  placeholder="Search for a song on Gaana..."
-                  value={formData.gaanaSearch}
-                  onChange={handleInputChange}
-                />
-                <button
-                  type="button"
-                  className={styles.gaanaButton}
-                  onClick={handleGaanaSearch}
-                  disabled={isSearchingGaana}
-                >
-                  {isSearchingGaana ? "Searching..." : "Search"}
-                </button>
-              </div>
-            </div>
-
             <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.formGroup}>
                 <label htmlFor="title" className={styles.label}>

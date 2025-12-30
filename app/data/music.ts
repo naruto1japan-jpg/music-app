@@ -9,7 +9,7 @@ export interface Track {
   coverUrl?: string;
   audioFile?: File;
   audioUrl?: string;
-  gaanaTrackId?: string;
+  youtubeVideoId?: string;
   featured?: boolean;
 }
 

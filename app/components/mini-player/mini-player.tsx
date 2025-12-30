@@ -4,6 +4,14 @@ import { useMusic } from "~/contexts/music-context";
 import { extractColorsFromImage, type DominantColors } from "~/utils/color-extractor";
 import styles from "./mini-player.module.css";
 
+// YouTube IFrame Player API types
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
+
 export function MiniPlayer() {
   const { 
     currentTrack, 
@@ -22,6 +30,21 @@ export function MiniPlayer() {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [coverUrl, setCoverUrl] = React.useState<string>('');
   const [dominantColors, setDominantColors] = React.useState<DominantColors | null>(null);
+  const [ytPlayer, setYtPlayer] = React.useState<any>(null);
+  const [ytCurrentTime, setYtCurrentTime] = React.useState(0);
+  const [ytDuration, setYtDuration] = React.useState(0);
+  const playerRef = React.useRef<HTMLDivElement>(null);
+  const intervalRef = React.useRef<number | null>(null);
+
+  // Load YouTube IFrame API
+  React.useEffect(() => {
+    if (window.YT) return;
+
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+  }, []);
 
   React.useEffect(() => {
     if (!currentTrack) {
@@ -41,9 +64,99 @@ export function MiniPlayer() {
     }
   }, [currentTrack]);
 
+  // Initialize YouTube player when track changes to YouTube track
+  React.useEffect(() => {
+    if (!currentTrack?.youtubeVideoId || !window.YT) return;
+
+    const initPlayer = () => {
+      // Clean up existing player
+      if (ytPlayer) {
+        ytPlayer.destroy();
+      }
+
+      // Create new player
+      const player = new window.YT.Player('youtube-player', {
+        height: '0',
+        width: '0',
+        videoId: currentTrack.youtubeVideoId,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          playsinline: 1,
+        },
+        events: {
+          onReady: (event: any) => {
+            console.log('YouTube player ready');
+            setYtPlayer(event.target);
+            setYtDuration(event.target.getDuration());
+            if (isPlaying) {
+              event.target.playVideo();
+            }
+          },
+          onStateChange: (event: any) => {
+            if (event.data === window.YT.PlayerState.ENDED) {
+              nextTrack();
+            }
+          },
+        },
+      });
+    };
+
+    if (window.YT.Player) {
+      initPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = initPlayer;
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [currentTrack?.youtubeVideoId]);
+
+  // Update YouTube player time
+  React.useEffect(() => {
+    if (!ytPlayer || !currentTrack?.youtubeVideoId) return;
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = window.setInterval(() => {
+      if (ytPlayer.getCurrentTime) {
+        setYtCurrentTime(ytPlayer.getCurrentTime());
+      }
+    }, 100);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [ytPlayer, currentTrack?.youtubeVideoId]);
+
+  // Control YouTube player playback
+  React.useEffect(() => {
+    if (!ytPlayer || !currentTrack?.youtubeVideoId) return;
+
+    if (isPlaying) {
+      ytPlayer.playVideo?.();
+    } else {
+      ytPlayer.pauseVideo?.();
+    }
+  }, [isPlaying, ytPlayer, currentTrack?.youtubeVideoId]);
+
   if (!currentTrack) {
     return null;
   }
+
+  const isYouTubeTrack = !!currentTrack.youtubeVideoId;
+  const displayCurrentTime = isYouTubeTrack ? ytCurrentTime : currentTime;
+  const displayDuration = isYouTubeTrack ? ytDuration : duration;
 
   const getMeshGradientStyle = (): React.CSSProperties => {
     if (!dominantColors) return {};
@@ -81,18 +194,31 @@ export function MiniPlayer() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progress = displayDuration > 0 ? (displayCurrentTime / displayDuration) * 100 : 0;
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
-    const newTime = percentage * duration;
-    seek(newTime);
+    const newTime = percentage * displayDuration;
+    
+    if (isYouTubeTrack && ytPlayer) {
+      ytPlayer.seekTo(newTime, true);
+      setYtCurrentTime(newTime);
+    } else {
+      seek(newTime);
+    }
   };
 
   return (
     <>
+      {/* Hidden YouTube player */}
+      {isYouTubeTrack && (
+        <div style={{ position: 'absolute', left: '-9999px' }}>
+          <div id="youtube-player" ref={playerRef}></div>
+        </div>
+      )}
+
       {/* Mini Player Bar */}
       <div 
         className={styles.player} 
@@ -167,8 +293,8 @@ export function MiniPlayer() {
                   />
                 </div>
                 <div className={styles.timeInfo}>
-                  <span className={styles.currentTime}>{formatTime(currentTime)}</span>
-                  <span className={styles.totalTime}>{formatTime(duration)}</span>
+                  <span className={styles.currentTime}>{formatTime(displayCurrentTime)}</span>
+                  <span className={styles.totalTime}>{formatTime(displayDuration)}</span>
                 </div>
                 <div className={styles.toggleControls}>
                   <button 

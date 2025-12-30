@@ -37,7 +37,7 @@ interface SerializedTrack {
   audioDataUrl?: string;
   coverUrl?: string;
   audioUrl?: string;
-  gaanaTrackId?: string;
+  youtubeVideoId?: string;
   featured?: boolean;
 }
 
@@ -180,7 +180,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
               duration: track.duration,
               coverUrl: track.coverUrl,
               audioUrl: track.audioUrl,
-              gaanaTrackId: track.gaanaTrackId,
+              youtubeVideoId: track.youtubeVideoId,
               featured: track.featured,
             };
 
@@ -225,19 +225,28 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
     // Play audio
     if (audioRef.current) {
-      // Use audioUrl directly (it's already a data URL for uploaded tracks)
-      const audioUrl = track.audioUrl;
-      if (audioUrl) {
-        console.log('Playing audio from:', audioUrl.substring(0, 50) + '...');
-        audioRef.current.src = audioUrl;
-        try {
-          await audioRef.current.play();
-          console.log('Audio playback started successfully');
-        } catch (err) {
-          console.error('Playback error:', err);
-        }
+      // Check if this is a YouTube track
+      if (track.youtubeVideoId) {
+        // For YouTube tracks, we'll need to use iframe embed
+        // Set a placeholder for now - actual playback will be handled by iframe
+        console.log('YouTube track selected:', track.youtubeVideoId);
+        // Don't set audioRef src for YouTube tracks
+        audioRef.current.src = '';
       } else {
-        console.error('No audio URL available for track:', track.title);
+        // Use audioUrl directly (it's already a data URL for uploaded tracks)
+        const audioUrl = track.audioUrl;
+        if (audioUrl) {
+          console.log('Playing audio from:', audioUrl.substring(0, 50) + '...');
+          audioRef.current.src = audioUrl;
+          try {
+            await audioRef.current.play();
+            console.log('Audio playback started successfully');
+          } catch (err) {
+            console.error('Playback error:', err);
+          }
+        } else {
+          console.error('No audio URL available for track:', track.title);
+        }
       }
     }
   }, []);
