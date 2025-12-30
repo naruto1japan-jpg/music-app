@@ -175,17 +175,17 @@ export function MiniPlayer() {
                     className={`${styles.toggleButton} ${isShuffle ? styles.active : ''}`}
                     onClick={toggleShuffle}
                     aria-label="Toggle shuffle"
+                    title="Shuffle"
                   >
-                    <Shuffle size={18} />
-                    <span>Shuffle</span>
+                    <Shuffle size={20} />
                   </button>
                   <button 
                     className={`${styles.toggleButton} ${isRepeat ? styles.active : ''}`}
                     onClick={toggleRepeat}
                     aria-label="Toggle repeat"
+                    title="Repeat"
                   >
-                    <Repeat size={18} />
-                    <span>Repeat</span>
+                    <Repeat size={20} />
                   </button>
                 </div>
               </div>
