@@ -16,12 +16,26 @@ export function MiniPlayer() {
     isShuffle
   } = useMusic();
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const [coverUrl, setCoverUrl] = React.useState<string>('');
+
+  React.useEffect(() => {
+    if (!currentTrack) {
+      setCoverUrl('');
+      return;
+    }
+
+    if (currentTrack.coverUrl) {
+      setCoverUrl(currentTrack.coverUrl);
+    } else if (currentTrack.coverFile) {
+      const url = URL.createObjectURL(currentTrack.coverFile);
+      setCoverUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [currentTrack]);
 
   if (!currentTrack) {
     return null;
   }
-
-  const coverUrl = currentTrack.coverUrl || (currentTrack.coverFile ? URL.createObjectURL(currentTrack.coverFile) : '');
 
   return (
     <>

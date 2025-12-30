@@ -19,6 +19,44 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+function TrackListItem({ track, onDelete }: { track: Track; onDelete: (id: string) => void }) {
+  const [coverUrl, setCoverUrl] = React.useState<string>('');
+
+  React.useEffect(() => {
+    if (track.coverUrl) {
+      setCoverUrl(track.coverUrl);
+    } else if (track.coverFile) {
+      const url = URL.createObjectURL(track.coverFile);
+      setCoverUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [track.coverUrl, track.coverFile]);
+
+  return (
+    <div className={styles.musicItem}>
+      <img src={coverUrl} alt={track.title} className={styles.musicCover} />
+      <div className={styles.musicInfo}>
+        <h4 className={styles.musicTitle}>{track.title}</h4>
+        <p className={styles.musicArtist}>
+          {track.artist} • {track.genre}
+        </p>
+      </div>
+      <div className={styles.musicActions}>
+        <button className={styles.actionButton} aria-label="Edit track">
+          <Edit size={16} />
+        </button>
+        <button
+          className={`${styles.actionButton} ${styles.deleteButton}`}
+          onClick={() => onDelete(track.id)}
+          aria-label="Delete track"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const { toast } = useToast();
   const { tracks, addTrack, deleteTrack } = useMusic();
@@ -369,32 +407,9 @@ export default function Admin() {
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Music Library ({tracks.length})</h3>
             <div className={styles.musicList}>
-              {tracks.map((track) => {
-                const coverUrl = track.coverUrl || (track.coverFile ? URL.createObjectURL(track.coverFile) : '');
-                return (
-                <div key={track.id} className={styles.musicItem}>
-                  <img src={coverUrl} alt={track.title} className={styles.musicCover} />
-                  <div className={styles.musicInfo}>
-                    <h4 className={styles.musicTitle}>{track.title}</h4>
-                    <p className={styles.musicArtist}>
-                      {track.artist} • {track.genre}
-                    </p>
-                  </div>
-                  <div className={styles.musicActions}>
-                    <button className={styles.actionButton} aria-label="Edit track">
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      className={`${styles.actionButton} ${styles.deleteButton}`}
-                      onClick={() => handleDelete(track.id)}
-                      aria-label="Delete track"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              );
-              })}
+              {tracks.map((track) => (
+                <TrackListItem key={track.id} track={track} onDelete={handleDelete} />
+              ))}
             </div>
           </div>
         </div>

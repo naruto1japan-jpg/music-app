@@ -77,13 +77,15 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
                 ...track,
               };
 
-              // Convert data URLs back to File objects
+              // Use data URLs directly as coverUrl and audioUrl
               if (track.coverDataUrl) {
+                result.coverUrl = track.coverDataUrl;
                 const blob = await fetch(track.coverDataUrl).then(r => r.blob());
                 result.coverFile = new File([blob], 'cover.jpg', { type: blob.type });
               }
 
               if (track.audioDataUrl) {
+                result.audioUrl = track.audioDataUrl;
                 const blob = await fetch(track.audioDataUrl).then(r => r.blob());
                 result.audioFile = new File([blob], 'audio.mp3', { type: blob.type });
               }
@@ -199,8 +201,19 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isPlaying, pauseTrack, resumeTrack]);
 
-  const addTrack = React.useCallback((track: Track) => {
-    setTracks((prev) => [track, ...prev]);
+  const addTrack = React.useCallback(async (track: Track) => {
+    // Convert File objects to data URLs immediately
+    const newTrack = { ...track };
+    
+    if (track.coverFile && !track.coverUrl) {
+      newTrack.coverUrl = await fileToDataUrl(track.coverFile);
+    }
+    
+    if (track.audioFile && !track.audioUrl) {
+      newTrack.audioUrl = await fileToDataUrl(track.audioFile);
+    }
+    
+    setTracks((prev) => [newTrack, ...prev]);
   }, []);
 
   // Helper function to convert File to data URL

@@ -1,3 +1,4 @@
+import React from "react";
 import { Play } from "lucide-react";
 import type { Track } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
@@ -17,7 +18,17 @@ function formatDuration(seconds: number): string {
 
 export function MusicCard({ track, className }: MusicCardProps) {
   const { playTrack } = useMusic();
-  const coverUrl = track.coverUrl || (track.coverFile ? URL.createObjectURL(track.coverFile) : '');
+  const [coverUrl, setCoverUrl] = React.useState<string>('');
+
+  React.useEffect(() => {
+    if (track.coverUrl) {
+      setCoverUrl(track.coverUrl);
+    } else if (track.coverFile) {
+      const url = URL.createObjectURL(track.coverFile);
+      setCoverUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [track.coverUrl, track.coverFile]);
 
   const handlePlay = () => {
     playTrack(track);
