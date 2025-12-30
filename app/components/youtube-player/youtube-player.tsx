@@ -21,12 +21,19 @@ const YT_STATES = {
 };
 
 let audioUnlocked = false;
+let mediaSession: MediaSession | null = null;
+
+// Initialize Media Session API for background playback control
+if ('mediaSession' in navigator) {
+  mediaSession = navigator.mediaSession;
+}
 
 export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTimeUpdate, onPlayerReady }: YouTubePlayerProps) {
   const playerRef = React.useRef<any>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const timeUpdateIntervalRef = React.useRef<number | null>(null);
   const [showUnlock, setShowUnlock] = React.useState(!audioUnlocked);
+  const videoInfoRef = React.useRef<{ title: string; artist: string; thumbnail: string } | null>(null);
 
   // Load YouTube IFrame API
   React.useEffect(() => {
@@ -41,6 +48,28 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
       };
     }
   }, []);
+
+  // Fetch video info for Media Session
+  React.useEffect(() => {
+    const fetchVideoInfo = async () => {
+      try {
+        const response = await fetch(
+          `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          videoInfoRef.current = {
+            title: data.title || 'Unknown Track',
+            artist: data.author_name || 'Unknown Artist',
+            thumbnail: data.thumbnail_url || '',
+          };
+        }
+      } catch (error) {
+        console.warn('Could not fetch video info:', error);
+      }
+    };
+    fetchVideoInfo();
+  }, [videoId]);
 
   // Initialize player when API is ready
   React.useEffect(() => {
@@ -71,11 +100,13 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
           onReady: (event: any) => {
             console.log('YouTube player ready');
             onPlayerReady?.(event.target);
+            setupMediaSession(event.target);
             onReady?.();
           },
           onStateChange: (event: any) => {
             console.log('YouTube player state:', event.data);
             onStateChange?.(event.data);
+            updateMediaSessionState(event.data);
 
             if (event.data === YT_STATES.PLAYING) {
               startTimeUpdateInterval();
@@ -97,6 +128,67 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
       }
     };
   }, [videoId]);
+
+  // Setup Media Session API for background playback controls
+  const setupMediaSession = (player: any) => {
+    if (!mediaSession || !videoInfoRef.current) return;
+
+    try {
+      const info = videoInfoRef.current;
+      mediaSession.metadata = new MediaMetadata({
+        title: info.title,
+        artist: info.artist,
+        artwork: [
+          {
+            src: info.thumbnail,
+            sizes: '512x512',
+            type: 'image/jpeg',
+          },
+        ],
+      });
+
+      // Set up action handlers for background controls
+      mediaSession.setActionHandler('play', () => {
+        player.playVideo();
+      });
+
+      mediaSession.setActionHandler('pause', () => {
+        player.pauseVideo();
+      });
+
+      mediaSession.setActionHandler('seekbackward', () => {
+        const currentTime = player.getCurrentTime();
+        player.seekTo(Math.max(0, currentTime - 10));
+      });
+
+      mediaSession.setActionHandler('seekforward', () => {
+        const currentTime = player.getCurrentTime();
+        const duration = player.getDuration();
+        player.seekTo(Math.min(duration, currentTime + 10));
+      });
+
+      console.log('Media Session API initialized');
+    } catch (error) {
+      console.warn('Failed to setup Media Session:', error);
+    }
+  };
+
+  // Update playback state for Media Session
+  const updateMediaSessionState = (state: number) => {
+    if (!mediaSession) return;
+
+    try {
+      if (state === YT_STATES.PLAYING) {
+        mediaSession.playbackState = 'playing';
+      } else if (state === YT_STATES.PAUSED) {
+        mediaSession.playbackState = 'paused';
+      } else {
+        mediaSession.playbackState = 'none';
+      }
+    } catch (error) {
+      console.warn('Failed to update Media Session state:', error);
+    }
+  };
 
   // Handle play/pause from parent
   React.useEffect(() => {
