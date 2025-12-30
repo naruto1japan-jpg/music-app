@@ -91,7 +91,16 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
       }
 
       if (playerRef.current) {
-        playerRef.current.destroy();
+        try {
+          playerRef.current.destroy();
+        } catch (e) {
+          console.warn('Error destroying player:', e);
+        }
+      }
+
+      // Clear the container before creating new player
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
       }
 
       playerRef.current = new (window as any).YT.Player(containerRef.current, {
@@ -157,7 +166,12 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
       stopTimeUpdateInterval();
       stopKeepAlive();
       if (playerRef.current) {
-        playerRef.current.destroy();
+        try {
+          playerRef.current.destroy();
+        } catch (e) {
+          console.warn('Error destroying player on cleanup:', e);
+        }
+        playerRef.current = null;
       }
     };
   }, [videoId]);
