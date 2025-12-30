@@ -3,20 +3,30 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, 0.85);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: var(--space-3) var(--space-5);
   z-index: 100;
-  backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(180%);
   cursor: pointer;
-  transition: all 0.3s var(--ease-out);
+  transition: all 0.5s var(--ease-out);
   height: 80px;
   display: flex;
   align-items: center;
+  overflow: hidden;
+  background-size: 200% 200%;
 }
 
-.player:hover {
-  background: rgba(0, 0, 0, 0.9);
+.player::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  filter: blur(40px);
+  opacity: 0.8;
+  z-index: -1;
 }
 
 .container {
@@ -117,6 +127,22 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Mesh Gradient Animation */
+@keyframes meshFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 50% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 100%;
+  }
+}
+
 /* Expanded Player */
 .expandedPlayer {
   position: fixed;
@@ -124,10 +150,24 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
   z-index: 200;
-  backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(60px) saturate(180%);
   animation: slideUp 0.3s var(--ease-out);
+  overflow: hidden;
+  background-size: 300% 300%;
+}
+
+.expandedPlayer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  filter: blur(80px);
+  opacity: 0.6;
+  z-index: -1;
 }
 
 @keyframes slideUp {
@@ -184,18 +224,61 @@
   border-radius: var(--radius-4);
   overflow: hidden;
   box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    0 0 40px rgba(147, 51, 234, 0.3),
-    0 0 80px rgba(236, 72, 153, 0.2);
-  animation: float-cover 6s ease-in-out infinite;
+    0 20px 60px rgba(0, 0, 0, 0.7),
+    0 0 60px rgba(147, 51, 234, 0.4),
+    0 0 120px rgba(236, 72, 153, 0.3);
+  animation: floatCover 6s ease-in-out infinite, pulseGlow 4s ease-in-out infinite;
+  position: relative;
 }
 
-@keyframes float-cover {
-  0%, 100% {
-    transform: translateY(0);
+.coverArtContainer::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, 
+    rgba(147, 51, 234, 0.5),
+    rgba(236, 72, 153, 0.5),
+    rgba(59, 130, 246, 0.5)
+  );
+  border-radius: var(--radius-4);
+  z-index: -1;
+  animation: rotateGradient 8s linear infinite;
+  filter: blur(20px);
+}
+
+@keyframes rotateGradient {
+  0% {
+    transform: rotate(0deg) scale(1);
   }
   50% {
-    transform: translateY(-10px);
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 
+      0 20px 60px rgba(0, 0, 0, 0.7),
+      0 0 60px rgba(147, 51, 234, 0.4),
+      0 0 120px rgba(236, 72, 153, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 25px 80px rgba(0, 0, 0, 0.8),
+      0 0 100px rgba(147, 51, 234, 0.6),
+      0 0 180px rgba(236, 72, 153, 0.5);
+  }
+}
+
+@keyframes floatCover {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.02);
   }
 }
 
