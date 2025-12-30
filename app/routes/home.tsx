@@ -24,27 +24,25 @@ export default function Home() {
   }, [backgroundGradient]);
 
   return (
-    <div className={styles.page}>
+    <div className={styles.layout}>
       <Header />
-      <div className={styles.hero}>
-        <h2 className={styles.heroTitle}>Discover Your Sound</h2>
-        <p className={styles.heroSubtitle}>Explore millions of tracks and find your perfect rhythm</p>
-      </div>
-      
-      {lastPlayed.length > 0 && (
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Last Played</h3>
-          <div className={styles.grid}>
-            {lastPlayed.map((track) => (
-              <MusicCard
-                key={track.id}
-                track={track}
-              />
-            ))}
+      <main className={styles.mainContent}>
+        <div className={styles.contentWrapper}>
+          <div className={styles.section}>
+            <h2 className={styles.greeting}>Good evening</h2>
+            {lastPlayed.length > 0 && (
+              <div className={styles.grid}>
+                {lastPlayed.slice(0, 6).map((track) => (
+                  <MusicCard
+                    key={track.id}
+                    track={track}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      )}
-      
+      </main>
       <MiniPlayer />
     </div>
   );
