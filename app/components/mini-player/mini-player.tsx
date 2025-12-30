@@ -14,7 +14,10 @@ export function MiniPlayer() {
     toggleRepeat,
     toggleShuffle,
     isRepeat,
-    isShuffle
+    isShuffle,
+    currentTime,
+    duration,
+    seek
   } = useMusic();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [coverUrl, setCoverUrl] = React.useState<string>('');
@@ -69,6 +72,23 @@ export function MiniPlayer() {
       `,
       animation: `${styles.meshFlow} 20s ease-in-out infinite`,
     };
+  };
+
+  const formatTime = (seconds: number): string => {
+    if (!isFinite(seconds) || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = x / rect.width;
+    const newTime = percentage * duration;
+    seek(newTime);
   };
 
   return (
@@ -137,6 +157,19 @@ export function MiniPlayer() {
                 <h2 className={styles.expandedTitle}>{currentTrack.title}</h2>
                 <p className={styles.expandedArtist}>{currentTrack.artist}</p>
                 <p className={styles.expandedAlbum}>{currentTrack.album}</p>
+              </div>
+
+              <div className={styles.progressSection}>
+                <div className={styles.progressBar} onClick={handleProgressClick}>
+                  <div 
+                    className={styles.progressFill} 
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <div className={styles.timeInfo}>
+                  <span className={styles.currentTime}>{formatTime(currentTime)}</span>
+                  <span className={styles.totalTime}>{formatTime(duration)}</span>
+                </div>
               </div>
 
               <div className={styles.expandedControls}>

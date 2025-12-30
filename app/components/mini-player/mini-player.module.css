@@ -314,6 +314,66 @@
   margin: 0;
 }
 
+.progressSection {
+  width: 100%;
+  margin-bottom: var(--space-6);
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+  transition: height 0.2s var(--ease-out);
+}
+
+.progressBar:hover {
+  height: 8px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(147, 51, 234, 0.9), rgba(236, 72, 153, 0.9));
+  border-radius: var(--radius-round);
+  transition: width 0.1s linear;
+  position: relative;
+}
+
+.progressFill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: var(--radius-round);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.2s var(--ease-out);
+}
+
+.progressBar:hover .progressFill::after {
+  opacity: 1;
+}
+
+.timeInfo {
+  display: flex;
+  justify-content: space-between;
+  font: var(--font-caption);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.currentTime,
+.totalTime {
+  font-size: 0.875rem;
+}
+
 .expandedControls {
   width: 100%;
 }

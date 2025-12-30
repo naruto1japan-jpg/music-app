@@ -20,6 +20,10 @@ interface MusicContextType {
   tracks: Track[];
   addTrack: (track: Track) => void;
   deleteTrack: (id: string) => void;
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+  currentTime: number;
+  duration: number;
+  seek: (time: number) => void;
 }
 
 interface SerializedTrack {
@@ -53,14 +57,38 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   );
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [isLoaded, setIsLoaded] = React.useState(false);
+  const [currentTime, setCurrentTime] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   // Initialize audio element
   React.useEffect(() => {
     audioRef.current = new Audio();
+    
+    const audio = audioRef.current;
+    
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+    
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+    };
+    
+    const handleDurationChange = () => {
+      setDuration(audio.duration);
+    };
+    
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('durationchange', handleDurationChange);
+    
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+        audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        audioRef.current.removeEventListener('durationchange', handleDurationChange);
         audioRef.current = null;
       }
     };
@@ -255,12 +283,30 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteTrack = React.useCallback((id: string) => {
-    console.log('Deleting track:', id);
+    console.log('Deleting track:', id, 'Is mock track:', MOCK_TRACK_IDS.has(id));
+    
+    // If deleting current track, stop playback
+    if (currentTrack?.id === id) {
+      setCurrentTrack(null);
+      setIsPlaying(false);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    }
+    
     setTracks((prev) => {
       const filtered = prev.filter((t) => t.id !== id);
-      console.log('Tracks after deletion:', filtered.length);
+      console.log('Tracks before deletion:', prev.length, 'After deletion:', filtered.length);
       return filtered;
     });
+  }, [currentTrack]);
+
+  const seek = React.useCallback((time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
   }, []);
 
   const nextTrack = React.useCallback(() => {
@@ -337,8 +383,12 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       tracks,
       addTrack,
       deleteTrack,
+      audioRef,
+      currentTime,
+      duration,
+      seek,
     }),
-    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack],
+    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek],
   );
 
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
