@@ -3,7 +3,6 @@
   border-radius: var(--radius-3);
   overflow: hidden;
   transition: all 0.3s var(--ease-out);
-  cursor: pointer;
   border: 1px solid var(--color-neutral-4);
   display: flex;
   flex-direction: column;
@@ -22,6 +21,7 @@
   aspect-ratio: 1;
   overflow: hidden;
   background: var(--color-neutral-3);
+  cursor: pointer;
 }
 
 .cover {
@@ -74,6 +74,12 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: var(--space-3);
+}
+
+.trackInfo {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-2);
 }
 
@@ -100,7 +106,13 @@
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
-  padding-top: var(--space-2);
+  gap: var(--space-3);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .genre {
@@ -114,4 +126,29 @@
 .duration {
   font: var(--font-caption);
   color: var(--color-neutral-10);
+}
+
+.queueButton {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-3);
+  background: var(--color-neutral-4);
+  color: var(--color-neutral-11);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  flex-shrink: 0;
+}
+
+.queueButton:hover {
+  background: var(--color-accent-9);
+  color: var(--color-accent-contrast);
+  transform: scale(1.05);
+}
+
+.queueButton:active {
+  transform: scale(0.95);
 }

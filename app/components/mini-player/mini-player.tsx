@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronUp, ChevronDown } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronUp, ChevronDown, ListMusic, Car, X } from "lucide-react";
 import { useMusic } from "~/contexts/music-context";
 import { extractColorsFromImage, type DominantColors } from "~/utils/color-extractor";
 import styles from "./mini-player.module.css";
@@ -17,11 +17,17 @@ export function MiniPlayer() {
     isShuffle,
     currentTime,
     duration,
-    seek
+    seek,
+    queue,
+    removeFromQueue,
+    clearQueue,
+    isDrivingMode,
+    toggleDrivingMode
   } = useMusic();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [coverUrl, setCoverUrl] = React.useState<string>('');
   const [dominantColors, setDominantColors] = React.useState<DominantColors | null>(null);
+  const [showQueue, setShowQueue] = React.useState(false);
 
 
   React.useEffect(() => {
@@ -112,6 +118,17 @@ export function MiniPlayer() {
           </div>
           <div className={styles.controls}>
             <button 
+              className={`${styles.iconButton} ${isDrivingMode ? styles.active : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleDrivingMode();
+              }}
+              aria-label="Driving mode"
+              title="Driving Mode"
+            >
+              <Car size={20} />
+            </button>
+            <button 
               className={styles.controlButton} 
               onClick={(e) => {
                 e.stopPropagation();
@@ -190,6 +207,23 @@ export function MiniPlayer() {
                   >
                     <Repeat size={20} />
                   </button>
+                  <button 
+                    className={`${styles.toggleButton} ${showQueue ? styles.active : ''}`}
+                    onClick={() => setShowQueue(!showQueue)}
+                    aria-label="Toggle queue"
+                    title="Queue"
+                  >
+                    <ListMusic size={20} />
+                    {queue.length > 0 && <span className={styles.queueBadge}>{queue.length}</span>}
+                  </button>
+                  <button 
+                    className={`${styles.toggleButton} ${isDrivingMode ? styles.active : ''}`}
+                    onClick={toggleDrivingMode}
+                    aria-label="Toggle driving mode"
+                    title="Driving Mode"
+                  >
+                    <Car size={20} />
+                  </button>
                 </div>
               </div>
 
@@ -218,6 +252,49 @@ export function MiniPlayer() {
                   </button>
                 </div>
               </div>
+
+              {showQueue && (
+                <div className={styles.queueContainer}>
+                  <div className={styles.queueHeader}>
+                    <h3 className={styles.queueTitle}>Queue</h3>
+                    {queue.length > 0 && (
+                      <button 
+                        className={styles.clearButton}
+                        onClick={clearQueue}
+                        aria-label="Clear queue"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
+                  {queue.length === 0 ? (
+                    <p className={styles.emptyQueue}>No tracks in queue</p>
+                  ) : (
+                    <div className={styles.queueList}>
+                      {queue.map((track, index) => (
+                        <div key={`${track.id}-${index}`} className={styles.queueItem}>
+                          <img 
+                            src={track.coverUrl} 
+                            alt={`${track.title} cover`} 
+                            className={styles.queueCover}
+                          />
+                          <div className={styles.queueTrackInfo}>
+                            <p className={styles.queueTrackTitle}>{track.title}</p>
+                            <p className={styles.queueTrackArtist}>{track.artist}</p>
+                          </div>
+                          <button 
+                            className={styles.removeButton}
+                            onClick={() => removeFromQueue(index)}
+                            aria-label="Remove from queue"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

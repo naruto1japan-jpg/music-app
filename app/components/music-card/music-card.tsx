@@ -1,5 +1,5 @@
 import React from "react";
-import { Play } from "lucide-react";
+import { Play, ListPlus } from "lucide-react";
 import type { Track } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
 import styles from "./music-card.module.css";
@@ -17,7 +17,7 @@ function formatDuration(seconds: number): string {
 }
 
 export function MusicCard({ track, className }: MusicCardProps) {
-  const { playTrack } = useMusic();
+  const { playTrack, addToQueue } = useMusic();
   const [coverUrl, setCoverUrl] = React.useState<string>('');
 
   React.useEffect(() => {
@@ -40,9 +40,14 @@ export function MusicCard({ track, className }: MusicCardProps) {
     playTrack(track);
   };
 
+  const handleAddToQueue = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToQueue(track);
+  };
+
   return (
-    <div className={classNames(styles.card, className)} onClick={handlePlay}>
-      <div className={styles.coverContainer}>
+    <div className={classNames(styles.card, className)}>
+      <div className={styles.coverContainer} onClick={handlePlay}>
         <img src={coverUrl} alt={`${track.title} cover`} className={styles.cover} />
         <div className={styles.playOverlay}>
           <button className={styles.playButton} aria-label="Play track">
@@ -51,11 +56,23 @@ export function MusicCard({ track, className }: MusicCardProps) {
         </div>
       </div>
       <div className={styles.content}>
-        <h3 className={styles.title}>{track.title}</h3>
-        <p className={styles.artist}>{track.artist}</p>
+        <div className={styles.trackInfo}>
+          <h3 className={styles.title}>{track.title}</h3>
+          <p className={styles.artist}>{track.artist}</p>
+        </div>
         <div className={styles.footer}>
-          <span className={styles.genre}>{track.genre}</span>
-          <span className={styles.duration}>{formatDuration(track.duration)}</span>
+          <div className={styles.meta}>
+            <span className={styles.genre}>{track.genre}</span>
+            <span className={styles.duration}>{formatDuration(track.duration)}</span>
+          </div>
+          <button 
+            className={styles.queueButton}
+            onClick={handleAddToQueue}
+            aria-label="Add to queue"
+            title="Add to queue"
+          >
+            <ListPlus size={18} />
+          </button>
         </div>
       </div>
     </div>

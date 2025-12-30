@@ -25,6 +25,12 @@ interface MusicContextType {
   currentTime: number;
   duration: number;
   seek: (time: number) => void;
+  queue: Track[];
+  addToQueue: (track: Track) => void;
+  removeFromQueue: (index: number) => void;
+  clearQueue: () => void;
+  isDrivingMode: boolean;
+  toggleDrivingMode: () => void;
 }
 
 interface SerializedTrack {
@@ -65,6 +71,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = React.useState<string | null>(null);
   const youtubePlayerRef = React.useRef<any>(null);
+  const [queue, setQueue] = React.useState<Track[]>([]);
+  const [isDrivingMode, setIsDrivingMode] = React.useState(false);
 
   // Initialize audio element
   React.useEffect(() => {
@@ -367,6 +375,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   }, [youtubeVideoId]);
 
   const nextTrack = React.useCallback(() => {
+    // If there's a queue, play from queue first
+    if (queue.length > 0) {
+      const nextTrack = queue[0];
+      setQueue(prev => prev.slice(1));
+      playTrack(nextTrack);
+      return;
+    }
+    
     if (!currentTrack || tracks.length === 0) return;
     
     const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
@@ -379,7 +395,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
     
     playTrack(tracks[nextIndex]);
-  }, [currentTrack, tracks, isShuffle, playTrack]);
+  }, [currentTrack, tracks, isShuffle, playTrack, queue]);
 
   const previousTrack = React.useCallback(() => {
     if (!currentTrack || tracks.length === 0) return;
@@ -403,6 +419,52 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const toggleShuffle = React.useCallback(() => {
     setIsShuffle(prev => !prev);
   }, []);
+
+  const addToQueue = React.useCallback((track: Track) => {
+    setQueue(prev => [...prev, track]);
+  }, []);
+
+  const removeFromQueue = React.useCallback((index: number) => {
+    setQueue(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const clearQueue = React.useCallback(() => {
+    setQueue([]);
+  }, []);
+
+  const toggleDrivingMode = React.useCallback(() => {
+    setIsDrivingMode(prev => {
+      const newMode = !prev;
+      if (newMode) {
+        // When enabling driving mode, find and play phonk music from YouTube
+        const phonkTracks = tracks.filter(t => 
+          t.genre.toLowerCase().includes('phonk') || 
+          t.title.toLowerCase().includes('phonk') ||
+          t.artist.toLowerCase().includes('phonk')
+        );
+        
+        if (phonkTracks.length > 0) {
+          // Play a random phonk track
+          const randomPhonk = phonkTracks[Math.floor(Math.random() * phonkTracks.length)];
+          playTrack(randomPhonk);
+        } else {
+          // If no phonk tracks, create a temporary one with a popular phonk video
+          const drivingPhonk: Track = {
+            id: 'driving-phonk-temp',
+            title: 'SHADOWBOXING - Phonk',
+            artist: 'KXNVRA',
+            album: 'Driving Mode',
+            genre: 'Phonk',
+            duration: 180,
+            coverUrl: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=400&fit=crop',
+            youtubeVideoId: 'LGfuScqWPLk',
+          };
+          playTrack(drivingPhonk);
+        }
+      }
+      return newMode;
+    });
+  }, [tracks, playTrack]);
 
   // Handle regular audio track end
   React.useEffect(() => {
@@ -477,8 +539,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       currentTime,
       duration,
       seek,
+      queue,
+      addToQueue,
+      removeFromQueue,
+      clearQueue,
+      isDrivingMode,
+      toggleDrivingMode,
     }),
-    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek],
+    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode],
   );
 
   return (
