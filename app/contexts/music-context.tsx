@@ -31,6 +31,7 @@ interface MusicContextType {
   clearQueue: () => void;
   isDrivingMode: boolean;
   toggleDrivingMode: () => void;
+  lastPlayed: Track[];
 }
 
 interface SerializedTrack {
@@ -52,6 +53,7 @@ const MusicContext = React.createContext<MusicContextType | null>(null);
 
 const STORAGE_KEY = 'harmony-flow-tracks';
 const DELETED_TRACKS_KEY = 'harmony-flow-deleted-tracks';
+const LAST_PLAYED_KEY = 'harmony-flow-last-played';
 // Pre-populate mock track IDs at module level
 const MOCK_TRACK_IDS = new Set<string>(mockTracks.map(t => t.id));
 
@@ -73,6 +75,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const youtubePlayerRef = React.useRef<any>(null);
   const [queue, setQueue] = React.useState<Track[]>([]);
   const [isDrivingMode, setIsDrivingMode] = React.useState(false);
+  const [lastPlayed, setLastPlayed] = React.useState<Track[]>([]);
 
   // Initialize audio element
   React.useEffect(() => {
@@ -122,6 +125,25 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         const deletedSet = new Set<string>(deletedIds ? JSON.parse(deletedIds) : []);
         setDeletedTrackIds(deletedSet);
         console.log('Loaded deleted track IDs:', Array.from(deletedSet));
+
+        // Load last played tracks
+        const lastPlayedData = localStorage.getItem(LAST_PLAYED_KEY);
+        if (lastPlayedData) {
+          const serializedLastPlayed: SerializedTrack[] = JSON.parse(lastPlayedData);
+          const deserializedLastPlayed: Track[] = await Promise.all(
+            serializedLastPlayed.map(async (track) => {
+              const result: Track = { ...track };
+              if (track.coverDataUrl) {
+                result.coverUrl = track.coverDataUrl;
+              }
+              if (track.audioDataUrl) {
+                result.audioUrl = track.audioDataUrl;
+              }
+              return result;
+            })
+          );
+          setLastPlayed(deserializedLastPlayed);
+        }
 
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
@@ -233,6 +255,29 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setCurrentTrack(track);
     setIsPlaying(true);
     setCurrentTime(0);
+
+    // Update last played
+    setLastPlayed(prev => {
+      const filtered = prev.filter(t => t.id !== track.id);
+      const updated = [track, ...filtered].slice(0, 10); // Keep last 10 tracks
+      // Save to localStorage
+      const serialized = updated.map(t => ({
+        id: t.id,
+        title: t.title,
+        artist: t.artist,
+        album: t.album,
+        genre: t.genre,
+        duration: t.duration,
+        coverUrl: t.coverUrl,
+        audioUrl: t.audioUrl,
+        youtubeVideoId: t.youtubeVideoId,
+        featured: t.featured,
+        coverDataUrl: t.coverUrl,
+        audioDataUrl: t.audioUrl,
+      }));
+      localStorage.setItem(LAST_PLAYED_KEY, JSON.stringify(serialized));
+      return updated;
+    });
 
     // Extract colors and update background
     const coverUrl = track.coverUrl;
@@ -545,8 +590,9 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       clearQueue,
       isDrivingMode,
       toggleDrivingMode,
+      lastPlayed,
     }),
-    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode],
+    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode, lastPlayed],
   );
 
   return (
