@@ -29,6 +29,14 @@ export default function Search() {
   const [isSearching, setIsSearching] = React.useState(false);
   const [searchError, setSearchError] = React.useState<string | null>(null);
 
+  // Debug: Check if API key is loaded
+  React.useEffect(() => {
+    console.log('Search page loaded. API Key check:', {
+      hasKey: !!import.meta.env.VITE_YOUTUBE_API_KEY,
+      keyLength: import.meta.env.VITE_YOUTUBE_API_KEY?.length || 0
+    });
+  }, []);
+
   React.useEffect(() => {
     setLocalResults(userTracks);
   }, [userTracks]);
@@ -60,10 +68,12 @@ export default function Search() {
       return;
     }
 
+    console.log('Initiating YouTube search for:', searchQuery);
     setIsSearching(true);
     setSearchError(null);
     try {
       const result = await searchYouTube(searchQuery);
+      console.log('Search completed. Results:', result.tracks.length);
       
       // Convert YouTube tracks to our Track format
       const tracks: Track[] = result.tracks.map((ytTrack: YouTubeTrack) => ({

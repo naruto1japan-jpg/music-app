@@ -20,14 +20,14 @@ export interface YouTubeSearchResult {
 }
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
-const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || '';
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 
-// Log API key status (without exposing the actual key)
-if (!YOUTUBE_API_KEY) {
-  console.warn('YouTube API key is missing. Set VITE_YOUTUBE_API_KEY in your .env file');
-} else {
-  console.log('YouTube API key loaded successfully');
-}
+// Debug: Log environment variable status
+console.log('Environment check:', {
+  hasKey: !!YOUTUBE_API_KEY,
+  keyLength: YOUTUBE_API_KEY?.length || 0,
+  allEnvVars: Object.keys(import.meta.env)
+});
 
 /**
  * Parse duration from ISO 8601 format (PT1M30S) to seconds
@@ -103,8 +103,10 @@ export async function searchYouTube(
 ): Promise<YouTubeSearchResult> {
   if (!YOUTUBE_API_KEY) {
     console.error('YouTube API key is not configured');
-    return { tracks: [], total: 0 };
+    throw new Error('YouTube API key is missing. Please configure VITE_YOUTUBE_API_KEY in your environment.');
   }
+
+  console.log('Starting YouTube search for:', query);
 
   try {
     // Step 1: Search for videos
@@ -121,7 +123,10 @@ export async function searchYouTube(
       searchParams.append('pageToken', pageToken);
     }
 
-    const searchResponse = await fetch(`${YOUTUBE_API_BASE}/search?${searchParams}`);
+    const searchUrl = `${YOUTUBE_API_BASE}/search?${searchParams}`;
+    console.log('Fetching from YouTube API...');
+    
+    const searchResponse = await fetch(searchUrl);
     
     if (!searchResponse.ok) {
       const errorText = await searchResponse.text();
@@ -140,11 +145,15 @@ export async function searchYouTube(
     }
 
     const searchData = await searchResponse.json();
-    const videoIds = searchData.items.map((item: any) => item.id.videoId);
+    console.log('YouTube search response:', { itemCount: searchData.items?.length || 0 });
+    const videoIds = searchData.items?.map((item: any) => item.id.videoId) || [];
 
     if (videoIds.length === 0) {
+      console.log('No videos found in search results');
       return { tracks: [], total: 0 };
     }
+    
+    console.log('Found video IDs:', videoIds.length);
 
     // Step 2: Get video details including duration
     const detailsParams = new URLSearchParams({
@@ -153,16 +162,20 @@ export async function searchYouTube(
       key: YOUTUBE_API_KEY,
     });
 
+    console.log('Fetching video details...');
     const detailsResponse = await fetch(`${YOUTUBE_API_BASE}/videos?${detailsParams}`);
     
     if (!detailsResponse.ok) {
+      const errorText = await detailsResponse.text();
+      console.error('Video details error:', errorText);
       throw new Error('Failed to fetch video details');
     }
 
     const detailsData = await detailsResponse.json();
+    console.log('Video details received:', { count: detailsData.items?.length || 0 });
 
     // Step 3: Map to our track format
-    const tracks: YouTubeTrack[] = detailsData.items.map((item: any) => {
+    const tracks: YouTubeTrack[] = (detailsData.items || []).map((item: any) => {
       const title = item.snippet.title;
       const channelTitle = item.snippet.channelTitle;
       
@@ -177,14 +190,16 @@ export async function searchYouTube(
       };
     });
 
+    console.log('Successfully mapped tracks:', tracks.length);
+    
     return {
       tracks,
-      total: searchData.pageInfo.totalResults || tracks.length,
+      total: searchData.pageInfo?.totalResults || tracks.length,
       nextPageToken: searchData.nextPageToken,
     };
   } catch (error) {
     console.error('YouTube search error:', error);
-    return { tracks: [], total: 0 };
+    throw error;
   }
 }
 
