@@ -10,6 +10,12 @@ interface MusicContextType {
   pauseTrack: () => void;
   resumeTrack: () => void;
   togglePlayPause: () => void;
+  nextTrack: () => void;
+  previousTrack: () => void;
+  toggleRepeat: () => void;
+  toggleShuffle: () => void;
+  isRepeat: boolean;
+  isShuffle: boolean;
   backgroundGradient: string;
   tracks: Track[];
   addTrack: (track: Track) => void;
@@ -38,8 +44,10 @@ const STORAGE_KEY = 'harmony-flow-tracks';
 export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [currentTrack, setCurrentTrack] = React.useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isRepeat, setIsRepeat] = React.useState(false);
+  const [isShuffle, setIsShuffle] = React.useState(false);
   const [backgroundGradient, setBackgroundGradient] = React.useState<string>(
-    'linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)'
+    'radial-gradient(circle at 20% 50%, rgba(147, 51, 234, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.4) 0%, transparent 50%)'
   );
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [isLoaded, setIsLoaded] = React.useState(false);
@@ -209,6 +217,62 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setTracks((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const nextTrack = React.useCallback(() => {
+    if (!currentTrack || tracks.length === 0) return;
+    
+    const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
+    let nextIndex;
+    
+    if (isShuffle) {
+      nextIndex = Math.floor(Math.random() * tracks.length);
+    } else {
+      nextIndex = (currentIndex + 1) % tracks.length;
+    }
+    
+    playTrack(tracks[nextIndex]);
+  }, [currentTrack, tracks, isShuffle, playTrack]);
+
+  const previousTrack = React.useCallback(() => {
+    if (!currentTrack || tracks.length === 0) return;
+    
+    const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
+    let prevIndex;
+    
+    if (isShuffle) {
+      prevIndex = Math.floor(Math.random() * tracks.length);
+    } else {
+      prevIndex = currentIndex - 1 < 0 ? tracks.length - 1 : currentIndex - 1;
+    }
+    
+    playTrack(tracks[prevIndex]);
+  }, [currentTrack, tracks, isShuffle, playTrack]);
+
+  const toggleRepeat = React.useCallback(() => {
+    setIsRepeat(prev => !prev);
+  }, []);
+
+  const toggleShuffle = React.useCallback(() => {
+    setIsShuffle(prev => !prev);
+  }, []);
+
+  // Handle track end
+  React.useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      if (isRepeat) {
+        audio.currentTime = 0;
+        audio.play().catch(err => console.error('Playback error:', err));
+      } else {
+        nextTrack();
+      }
+    };
+
+    audio.addEventListener('ended', handleEnded);
+    return () => audio.removeEventListener('ended', handleEnded);
+  }, [isRepeat, nextTrack]);
+
   const value = React.useMemo(
     () => ({
       currentTrack,
@@ -217,12 +281,18 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       pauseTrack,
       resumeTrack,
       togglePlayPause,
+      nextTrack,
+      previousTrack,
+      toggleRepeat,
+      toggleShuffle,
+      isRepeat,
+      isShuffle,
       backgroundGradient,
       tracks,
       addTrack,
       deleteTrack,
     }),
-    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, backgroundGradient, tracks, addTrack, deleteTrack],
+    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack],
   );
 
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
