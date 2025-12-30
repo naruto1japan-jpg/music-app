@@ -83,79 +83,95 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
         return;
       }
 
+      // Clean up existing player before creating new one
       if (playerRef.current) {
-        playerRef.current.destroy();
+        try {
+          playerRef.current.destroy();
+          playerRef.current = null;
+        } catch (error) {
+          console.error('Error destroying old player:', error);
+        }
       }
 
-      playerRef.current = new (window as any).YT.Player(containerRef.current, {
-        videoId,
-        playerVars: {
-          autoplay: 1,
-          mute: 1, // Always start muted to comply with browser autoplay policies
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          modestbranding: 1,
-          playsinline: 1, // Critical for mobile devices
-          enablejsapi: 1,
-          rel: 0,
-        },
-        events: {
-          onReady: (event: any) => {
-            console.log('YouTube player ready for videoId:', videoId);
-            playerInitializedRef.current = true;
-            onPlayerReady?.(event.target);
-            setupMediaSession(event.target);
-            onReady?.();
-            
-            // Show unlock overlay on first ready
-            if (!audioUnlocked) {
-              setShowUnlock(true);
-            } else {
-              // If audio was already unlocked (from previous video), unmute immediately
-              try {
-                event.target.unMute();
-                event.target.setVolume(100);
-              } catch (error) {
-                console.error('Error unmuting on ready:', error);
-              }
-            }
-          },
-          onStateChange: (event: any) => {
-            console.log('YouTube player state:', event.data);
-            onStateChange?.(event.data);
-            updateMediaSessionState(event.data);
+      // Clear the container to prevent DOM errors
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
 
-            if (event.data === YT_STATES.PLAYING) {
-              retryCountRef.current = 0; // Reset retry count on successful playback
-              startTimeUpdateInterval();
-              startKeepAlive();
-            } else if (event.data === YT_STATES.PAUSED) {
-              stopTimeUpdateInterval();
-              stopKeepAlive();
-            } else if (event.data === YT_STATES.BUFFERING) {
-              // Handle buffering state - retry if stuck
-              setTimeout(() => {
-                if (playerRef.current && isPlaying) {
-                  const currentState = playerRef.current.getPlayerState();
-                  if (currentState === YT_STATES.BUFFERING && retryCountRef.current < maxRetries) {
-                    console.log('Stuck in buffering, attempting recovery...');
-                    retryCountRef.current++;
-                    try {
-                      playerRef.current.playVideo();
-                    } catch (error) {
-                      console.error('Retry failed:', error);
+      // Small delay to ensure DOM is clean before creating new player
+      setTimeout(() => {
+        if (!containerRef.current) return;
+
+        playerRef.current = new (window as any).YT.Player(containerRef.current, {
+          videoId,
+          playerVars: {
+            autoplay: 1,
+            mute: 1, // Always start muted to comply with browser autoplay policies
+            controls: 0,
+            disablekb: 1,
+            fs: 0,
+            modestbranding: 1,
+            playsinline: 1, // Critical for mobile devices
+            enablejsapi: 1,
+            rel: 0,
+          },
+          events: {
+            onReady: (event: any) => {
+              console.log('YouTube player ready for videoId:', videoId);
+              playerInitializedRef.current = true;
+              onPlayerReady?.(event.target);
+              setupMediaSession(event.target);
+              onReady?.();
+              
+              // Show unlock overlay on first ready
+              if (!audioUnlocked) {
+                setShowUnlock(true);
+              } else {
+                // If audio was already unlocked (from previous video), unmute immediately
+                try {
+                  event.target.unMute();
+                  event.target.setVolume(100);
+                } catch (error) {
+                  console.error('Error unmuting on ready:', error);
+                }
+              }
+            },
+            onStateChange: (event: any) => {
+              console.log('YouTube player state:', event.data);
+              onStateChange?.(event.data);
+              updateMediaSessionState(event.data);
+
+              if (event.data === YT_STATES.PLAYING) {
+                retryCountRef.current = 0; // Reset retry count on successful playback
+                startTimeUpdateInterval();
+                startKeepAlive();
+              } else if (event.data === YT_STATES.PAUSED) {
+                stopTimeUpdateInterval();
+                stopKeepAlive();
+              } else if (event.data === YT_STATES.BUFFERING) {
+                // Handle buffering state - retry if stuck
+                setTimeout(() => {
+                  if (playerRef.current && isPlaying) {
+                    const currentState = playerRef.current.getPlayerState();
+                    if (currentState === YT_STATES.BUFFERING && retryCountRef.current < maxRetries) {
+                      console.log('Stuck in buffering, attempting recovery...');
+                      retryCountRef.current++;
+                      try {
+                        playerRef.current.playVideo();
+                      } catch (error) {
+                        console.error('Retry failed:', error);
+                      }
                     }
                   }
-                }
-              }, 3000); // Wait 3 seconds before retry
-            } else {
-              stopTimeUpdateInterval();
-              stopKeepAlive();
-            }
+                }, 3000); // Wait 3 seconds before retry
+              } else {
+                stopTimeUpdateInterval();
+                stopKeepAlive();
+              }
+            },
           },
-        },
-      });
+        });
+      }, 50);
     };
 
     initPlayer();
@@ -171,6 +187,10 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
           console.error('Error destroying player:', error);
         }
         playerRef.current = null;
+      }
+      // Clear container on cleanup
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
       }
     };
   }, [videoId, audioUnlocked]);
