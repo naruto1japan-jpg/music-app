@@ -1,0 +1,9 @@
+.player {
+  position: fixed;
+  bottom: -1000px;
+  left: -1000px;
+  width: 640px;
+  height: 360px;
+  opacity: 0;
+  pointer-events: none;
+}

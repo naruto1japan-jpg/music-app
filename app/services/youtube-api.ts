@@ -20,14 +20,34 @@ export interface YouTubeSearchResult {
 }
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
-const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
+
+// Multiple API keys with automatic fallback
+const YOUTUBE_API_KEYS = [
+  import.meta.env.VITE_YOUTUBE_API_KEY_1,
+  import.meta.env.VITE_YOUTUBE_API_KEY_2,
+  import.meta.env.VITE_YOUTUBE_API_KEY_3,
+].filter(Boolean);
+
+let currentKeyIndex = 0;
 
 // Debug: Log environment variable status
-console.log('Environment check:', {
-  hasKey: !!YOUTUBE_API_KEY,
-  keyLength: YOUTUBE_API_KEY?.length || 0,
-  allEnvVars: Object.keys(import.meta.env)
+console.log('YouTube API Keys loaded:', {
+  count: YOUTUBE_API_KEYS.length,
+  keysAvailable: YOUTUBE_API_KEYS.map((k, i) => `Key ${i + 1}: ${k?.substring(0, 10)}...`)
 });
+
+function getCurrentApiKey(): string {
+  if (YOUTUBE_API_KEYS.length === 0) {
+    throw new Error('No YouTube API keys configured');
+  }
+  return YOUTUBE_API_KEYS[currentKeyIndex];
+}
+
+function rotateToNextKey(): boolean {
+  currentKeyIndex = (currentKeyIndex + 1) % YOUTUBE_API_KEYS.length;
+  console.log(`Switched to API key ${currentKeyIndex + 1}`);
+  return currentKeyIndex !== 0; // Return false if we've cycled through all keys
+}
 
 /**
  * Parse duration from ISO 8601 format (PT1M30S) to seconds
@@ -94,6 +114,33 @@ function extractTitle(title: string): string {
 }
 
 /**
+ * Make a YouTube API request with automatic key rotation on failure
+ */
+async function makeYouTubeRequest(url: string, attempt = 0): Promise<Response> {
+  const apiKey = getCurrentApiKey();
+  const requestUrl = `${url}&key=${apiKey}`;
+  
+  const response = await fetch(requestUrl);
+  
+  // If we get a 400 or 403 error, try the next API key
+  if (!response.ok && (response.status === 400 || response.status === 403) && attempt < YOUTUBE_API_KEYS.length) {
+    const errorText = await response.text();
+    console.warn(`API key ${currentKeyIndex + 1} failed:`, {
+      status: response.status,
+      error: errorText.substring(0, 200)
+    });
+    
+    const hasMoreKeys = rotateToNextKey();
+    if (hasMoreKeys || attempt < YOUTUBE_API_KEYS.length - 1) {
+      console.log(`Retrying with next API key (attempt ${attempt + 1}/${YOUTUBE_API_KEYS.length})...`);
+      return makeYouTubeRequest(url, attempt + 1);
+    }
+  }
+  
+  return response;
+}
+
+/**
  * Search for music videos on YouTube
  */
 export async function searchYouTube(
@@ -101,9 +148,9 @@ export async function searchYouTube(
   maxResults = 20,
   pageToken?: string
 ): Promise<YouTubeSearchResult> {
-  if (!YOUTUBE_API_KEY) {
-    console.error('YouTube API key is not configured');
-    throw new Error('YouTube API key is missing. Please configure VITE_YOUTUBE_API_KEY in your environment.');
+  if (YOUTUBE_API_KEYS.length === 0) {
+    console.error('YouTube API keys are not configured');
+    throw new Error('YouTube API keys are missing. Please configure API keys in your environment.');
   }
 
   console.log('Starting YouTube search for:', query);
@@ -116,7 +163,6 @@ export async function searchYouTube(
       type: 'video',
       videoCategoryId: '10', // Music category
       maxResults: maxResults.toString(),
-      key: YOUTUBE_API_KEY,
     });
 
     if (pageToken) {
@@ -124,13 +170,9 @@ export async function searchYouTube(
     }
 
     const searchUrl = `${YOUTUBE_API_BASE}/search?${searchParams}`;
-    console.log('YouTube API Request:', {
-      url: searchUrl.replace(YOUTUBE_API_KEY, 'API_KEY_HIDDEN'),
-      query,
-      maxResults
-    });
+    console.log('YouTube API Request:', { query, maxResults });
     
-    const searchResponse = await fetch(searchUrl);
+    const searchResponse = await makeYouTubeRequest(searchUrl);
     
     if (!searchResponse.ok) {
       const errorText = await searchResponse.text();
@@ -152,13 +194,13 @@ export async function searchYouTube(
           // Provide helpful messages for common errors
           if (searchResponse.status === 400) {
             if (apiError.message?.includes('API key')) {
-              errorMessage = 'Invalid YouTube API key. Please check your API key configuration.';
+              errorMessage = 'All YouTube API keys are invalid. Please check your API key configuration.';
             } else if (apiError.errors) {
               const reasons = apiError.errors.map((e: any) => e.reason).join(', ');
               errorMessage = `YouTube API error: ${reasons}. ${apiError.message}`;
             }
           } else if (searchResponse.status === 403) {
-            errorMessage = 'YouTube API quota exceeded or API key lacks required permissions. Enable YouTube Data API v3 in Google Cloud Console.';
+            errorMessage = 'YouTube API quota exceeded on all keys or API keys lack required permissions. Enable YouTube Data API v3 in Google Cloud Console.';
           }
           
           console.error('Detailed API Error:', apiError);
@@ -185,11 +227,11 @@ export async function searchYouTube(
     const detailsParams = new URLSearchParams({
       part: 'contentDetails,snippet',
       id: videoIds.join(','),
-      key: YOUTUBE_API_KEY,
     });
 
     console.log('Fetching video details...');
-    const detailsResponse = await fetch(`${YOUTUBE_API_BASE}/videos?${detailsParams}`);
+    const detailsUrl = `${YOUTUBE_API_BASE}/videos?${detailsParams}`;
+    const detailsResponse = await makeYouTubeRequest(detailsUrl);
     
     if (!detailsResponse.ok) {
       const errorText = await detailsResponse.text();
@@ -235,7 +277,7 @@ export async function searchYouTube(
  * you'd need a backend service or use YouTube IFrame API
  */
 export function getYouTubeEmbedUrl(videoId: string): string {
-  return `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0`;
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
 }
 
 /**

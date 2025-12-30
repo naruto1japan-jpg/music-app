@@ -2,6 +2,7 @@ import React from "react";
 import type { Track } from "~/data/music";
 import { mockTracks } from "~/data/music";
 import { extractColorsFromImage, createGradientCSS, type DominantColors } from "~/utils/color-extractor";
+import { YouTubePlayer } from "~/components/youtube-player/youtube-player";
 
 interface MusicContextType {
   currentTrack: Track | null;
@@ -62,6 +63,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const [youtubeVideoId, setYoutubeVideoId] = React.useState<string | null>(null);
 
   // Initialize audio element
   React.useEffect(() => {
@@ -70,15 +72,21 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     const audio = audioRef.current;
     
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
+      if (!youtubeVideoId) {
+        setCurrentTime(audio.currentTime);
+      }
     };
     
     const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
+      if (!youtubeVideoId) {
+        setDuration(audio.duration);
+      }
     };
     
     const handleDurationChange = () => {
-      setDuration(audio.duration);
+      if (!youtubeVideoId) {
+        setDuration(audio.duration);
+      }
     };
     
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -94,7 +102,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [youtubeVideoId]);
 
   // Load tracks and deleted track IDs from localStorage on mount
   React.useEffect(() => {
@@ -114,7 +122,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           
           const deserializedTracks: Track[] = await Promise.all(
             serializedTracks.map(async (track) => {
-              console.log('Deserializing track:', track.title, '- Has audioDataUrl:', !!track.audioDataUrl);
+              console.log('Deserializing track:', track.title, '- Has audioDataUrl:', !!track.audioDataUrl, '- Has youtubeVideoId:', !!track.youtubeVideoId);
               const result: Track = {
                 ...track,
               };
@@ -184,6 +192,11 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
               featured: track.featured,
             };
 
+            // Don't serialize audio files for YouTube tracks
+            if (track.youtubeVideoId) {
+              return serialized;
+            }
+
             // Convert File objects to data URLs for storage
             if (track.coverFile) {
               serialized.coverDataUrl = await fileToDataUrl(track.coverFile);
@@ -210,6 +223,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const playTrack = React.useCallback(async (track: Track) => {
     setCurrentTrack(track);
     setIsPlaying(true);
+    setCurrentTime(0);
 
     // Extract colors and update background
     const coverUrl = track.coverUrl;
@@ -223,17 +237,20 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Play audio
-    if (audioRef.current) {
-      // Check if this is a YouTube track
-      if (track.youtubeVideoId) {
-        // For YouTube tracks, we'll need to use iframe embed
-        // Set a placeholder for now - actual playback will be handled by iframe
-        console.log('YouTube track selected:', track.youtubeVideoId);
-        // Don't set audioRef src for YouTube tracks
+    // Play audio or video
+    if (track.youtubeVideoId) {
+      // YouTube track
+      console.log('Playing YouTube track:', track.youtubeVideoId);
+      setYoutubeVideoId(track.youtubeVideoId);
+      if (audioRef.current) {
+        audioRef.current.pause();
         audioRef.current.src = '';
-      } else {
-        // Use audioUrl directly (it's already a data URL for uploaded tracks)
+      }
+      setDuration(track.duration);
+    } else {
+      // Regular audio track
+      setYoutubeVideoId(null);
+      if (audioRef.current) {
         const audioUrl = track.audioUrl;
         if (audioUrl) {
           console.log('Playing audio from:', audioUrl.substring(0, 50) + '...');
@@ -253,17 +270,13 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const pauseTrack = React.useCallback(() => {
     setIsPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
+    // Audio element will pause automatically via useEffect
   }, []);
 
   const resumeTrack = React.useCallback(() => {
     if (currentTrack) {
       setIsPlaying(true);
-      if (audioRef.current) {
-        audioRef.current.play().catch(err => console.error('Playback error:', err));
-      }
+      // YouTube player will resume automatically via useEffect
     }
   }, [currentTrack]);
 
@@ -313,6 +326,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     if (currentTrack?.id === id) {
       setCurrentTrack(null);
       setIsPlaying(false);
+      setYoutubeVideoId(null);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = '';
@@ -339,11 +353,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   }, [currentTrack]);
 
   const seek = React.useCallback((time: number) => {
-    if (audioRef.current) {
+    setCurrentTime(time);
+    if (youtubeVideoId) {
+      // YouTube seeking will be handled by the player component
+      // We'll need to expose a ref to the player for this
+    } else if (audioRef.current) {
       audioRef.current.currentTime = time;
-      setCurrentTime(time);
     }
-  }, []);
+  }, [youtubeVideoId]);
 
   const nextTrack = React.useCallback(() => {
     if (!currentTrack || tracks.length === 0) return;
@@ -383,10 +400,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setIsShuffle(prev => !prev);
   }, []);
 
-  // Handle track end
+  // Handle regular audio track end
   React.useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || youtubeVideoId) return;
 
     const handleEnded = () => {
       if (isRepeat) {
@@ -399,6 +416,35 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
     audio.addEventListener('ended', handleEnded);
     return () => audio.removeEventListener('ended', handleEnded);
+  }, [isRepeat, nextTrack, youtubeVideoId]);
+
+  // Handle play/pause for audio element
+  React.useEffect(() => {
+    if (youtubeVideoId || !audioRef.current) return;
+
+    if (isPlaying) {
+      audioRef.current.play().catch(err => console.error('Playback error:', err));
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying, youtubeVideoId]);
+
+  const handleYouTubeTimeUpdate = React.useCallback((currentTime: number, duration: number) => {
+    setCurrentTime(currentTime);
+    setDuration(duration);
+  }, []);
+
+  const handleYouTubeStateChange = React.useCallback((state: number) => {
+    // 0 = ended, 1 = playing, 2 = paused
+    if (state === 0) {
+      // Track ended
+      if (isRepeat) {
+        setCurrentTime(0);
+        setIsPlaying(true);
+      } else {
+        nextTrack();
+      }
+    }
   }, [isRepeat, nextTrack]);
 
   const value = React.useMemo(
@@ -427,7 +473,19 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek],
   );
 
-  return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
+  return (
+    <MusicContext.Provider value={value}>
+      {children}
+      {youtubeVideoId && (
+        <YouTubePlayer
+          videoId={youtubeVideoId}
+          isPlaying={isPlaying}
+          onTimeUpdate={handleYouTubeTimeUpdate}
+          onStateChange={handleYouTubeStateChange}
+        />
+      )}
+    </MusicContext.Provider>
+  );
 }
 
 export function useMusic() {
