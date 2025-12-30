@@ -19,10 +19,13 @@ const YT_STATES = {
   CUED: 5,
 };
 
+let audioUnlocked = false;
+
 export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTimeUpdate }: YouTubePlayerProps) {
   const playerRef = React.useRef<any>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const timeUpdateIntervalRef = React.useRef<number | null>(null);
+  const [showUnlock, setShowUnlock] = React.useState(!audioUnlocked);
 
   // Load YouTube IFrame API
   React.useEffect(() => {
@@ -53,12 +56,14 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
       playerRef.current = new (window as any).YT.Player(containerRef.current, {
         videoId,
         playerVars: {
-          autoplay: 0,
+          autoplay: 1,
+          mute: audioUnlocked ? 0 : 1, // Start muted unless audio is unlocked
           controls: 0,
           disablekb: 1,
           fs: 0,
           modestbranding: 1,
-          playsinline: 1,
+          playsinline: 1, // Critical for mobile devices
+          enablejsapi: 1,
           rel: 0,
         },
         events: {
@@ -125,5 +130,35 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
     }
   };
 
-  return <div ref={containerRef} className={styles.player} />;
+  const unlockAudio = () => {
+    if (playerRef.current) {
+      try {
+        playerRef.current.unMute();
+        playerRef.current.setVolume(100);
+        audioUnlocked = true;
+        setShowUnlock(false);
+        
+        // Resume playback if it was playing
+        if (isPlaying) {
+          playerRef.current.playVideo();
+        }
+      } catch (error) {
+        console.error('Error unlocking audio:', error);
+      }
+    }
+  };
+
+  return (
+    <>
+      {showUnlock && isPlaying && (
+        <div className={styles.audioUnlock} onClick={unlockAudio}>
+          <div className={styles.unlockContent}>
+            <h3>🔊 Click to Enable Audio</h3>
+            <p>Tap here to unmute and start playback</p>
+          </div>
+        </div>
+      )}
+      <div ref={containerRef} className={styles.player} />
+    </>
+  );
 }
