@@ -170,17 +170,28 @@ export function MiniPlayer() {
                   <span className={styles.currentTime}>{formatTime(currentTime)}</span>
                   <span className={styles.totalTime}>{formatTime(duration)}</span>
                 </div>
+                <div className={styles.toggleControls}>
+                  <button 
+                    className={`${styles.toggleButton} ${isShuffle ? styles.active : ''}`}
+                    onClick={toggleShuffle}
+                    aria-label="Toggle shuffle"
+                  >
+                    <Shuffle size={18} />
+                    <span>Shuffle</span>
+                  </button>
+                  <button 
+                    className={`${styles.toggleButton} ${isRepeat ? styles.active : ''}`}
+                    onClick={toggleRepeat}
+                    aria-label="Toggle repeat"
+                  >
+                    <Repeat size={18} />
+                    <span>Repeat</span>
+                  </button>
+                </div>
               </div>
 
               <div className={styles.expandedControls}>
                 <div className={styles.secondaryControls}>
-                  <button 
-                    className={`${styles.secondaryButton} ${isShuffle ? styles.active : ''}`}
-                    onClick={toggleShuffle}
-                    aria-label="Toggle shuffle"
-                  >
-                    <Shuffle size={20} />
-                  </button>
                   <button 
                     className={styles.mainControlButton}
                     onClick={previousTrack}
@@ -201,13 +212,6 @@ export function MiniPlayer() {
                     aria-label="Next track"
                   >
                     <SkipForward size={28} fill="currentColor" />
-                  </button>
-                  <button 
-                    className={`${styles.secondaryButton} ${isRepeat ? styles.active : ''}`}
-                    onClick={toggleRepeat}
-                    aria-label="Toggle repeat"
-                  >
-                    <Repeat size={20} />
                   </button>
                 </div>
               </div>
