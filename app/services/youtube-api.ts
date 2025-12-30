@@ -156,13 +156,16 @@ export async function searchYouTube(
   console.log('Starting YouTube search for:', query);
 
   try {
-    // Step 1: Search for videos
+    // Step 1: Search for music content
+    // Use YouTube Music specific search by adding 'topic' to get official music tracks
     const searchParams = new URLSearchParams({
       part: 'snippet',
       q: query,
       type: 'video',
       videoCategoryId: '10', // Music category
+      videoEmbeddable: 'true', // Only embeddable videos
       maxResults: maxResults.toString(),
+      topicId: '/m/04rlf', // Music topic ID - helps get music-specific content
     });
 
     if (pageToken) {
@@ -243,20 +246,35 @@ export async function searchYouTube(
     console.log('Video details received:', { count: detailsData.items?.length || 0 });
 
     // Step 3: Map to our track format
-    const tracks: YouTubeTrack[] = (detailsData.items || []).map((item: any) => {
-      const title = item.snippet.title;
-      const channelTitle = item.snippet.channelTitle;
-      
-      return {
-        id: `yt-${item.id}`,
-        videoId: item.id,
-        title: extractTitle(title),
-        artist: extractArtist(title) || channelTitle,
-        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-        duration: parseDuration(item.contentDetails.duration),
-        publishedAt: item.snippet.publishedAt,
-      };
-    });
+    // Filter and prioritize official music content
+    const tracks: YouTubeTrack[] = (detailsData.items || [])
+      .filter((item: any) => {
+        // Filter out very long videos (likely not music)
+        const duration = parseDuration(item.contentDetails.duration);
+        return duration > 0 && duration <= 900; // Max 15 minutes
+      })
+      .map((item: any) => {
+        const title = item.snippet.title;
+        const channelTitle = item.snippet.channelTitle;
+        
+        return {
+          id: `yt-${item.id}`,
+          videoId: item.id,
+          title: extractTitle(title),
+          artist: extractArtist(title) || channelTitle,
+          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+          duration: parseDuration(item.contentDetails.duration),
+          publishedAt: item.snippet.publishedAt,
+        };
+      })
+      .sort((a: YouTubeTrack, b: YouTubeTrack) => {
+        // Prioritize tracks from official channels (usually have 'VEVO', 'Official', 'Topic' in artist name)
+        const aIsOfficial = /vevo|official|topic/i.test(a.artist);
+        const bIsOfficial = /vevo|official|topic/i.test(b.artist);
+        if (aIsOfficial && !bIsOfficial) return -1;
+        if (!aIsOfficial && bIsOfficial) return 1;
+        return 0;
+      });
 
     console.log('Successfully mapped tracks:', tracks.length);
     
