@@ -4,7 +4,7 @@ import { Search as SearchIcon, Music2, Globe } from "lucide-react";
 import { Header } from "~/components/header/header";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
-import { mockTracks, GENRES, type Genre } from "~/data/music";
+import { GENRES, type Genre } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
 import styles from "./search.module.css";
 
@@ -23,13 +23,17 @@ export default function Search() {
   const [activeTab, setActiveTab] = React.useState<"search" | "categories">("search");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedGenre, setSelectedGenre] = React.useState<Genre>("All");
-  const [searchResults, setSearchResults] = React.useState(mockTracks);
+  const [searchResults, setSearchResults] = React.useState(userTracks);
+
+  React.useEffect(() => {
+    setSearchResults(userTracks);
+  }, [userTracks]);
 
   React.useEffect(() => {
     document.documentElement.style.setProperty('--dynamic-background', backgroundGradient);
   }, [backgroundGradient]);
 
-  const allTracks = userTracks.length > 0 ? [...userTracks, ...mockTracks] : mockTracks;
+  const allTracks = userTracks;
 
   const handleSearch = () => {
     if (!searchQuery.trim()) {
