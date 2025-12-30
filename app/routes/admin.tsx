@@ -32,11 +32,16 @@ function TrackListItem({ track, onDelete }: { track: Track; onDelete: (id: strin
     }
   }, [track.coverUrl, track.coverFile]);
 
+  const hasAudio = !!track.audioUrl || !!track.audioFile;
+
   return (
     <div className={styles.musicItem}>
       <img src={coverUrl} alt={track.title} className={styles.musicCover} />
       <div className={styles.musicInfo}>
-        <h4 className={styles.musicTitle}>{track.title}</h4>
+        <h4 className={styles.musicTitle}>
+          {track.title}
+          {hasAudio && <span className={styles.audioIndicator}> 🎵</span>}
+        </h4>
         <p className={styles.musicArtist}>
           {track.artist} • {track.genre}
         </p>
@@ -167,7 +172,7 @@ export default function Admin() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.title || !formData.artist || !formData.album || !formData.duration) {
@@ -188,6 +193,15 @@ export default function Admin() {
       return;
     }
 
+    if (!audioFile) {
+      toast({
+        title: "Error",
+        description: "Please select an audio file",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newTrack: Track = {
       id: Date.now().toString(),
       title: formData.title,
@@ -196,11 +210,12 @@ export default function Admin() {
       genre: formData.genre,
       duration: parseInt(formData.duration, 10),
       coverFile: coverFile,
-      audioFile: audioFile || undefined,
+      audioFile: audioFile,
       featured: false,
     };
 
-    addTrack(newTrack);
+    console.log('Adding new track with audio file:', audioFile.name, audioFile.type);
+    await addTrack(newTrack);
     
     setFormData({
       title: "",
@@ -380,7 +395,7 @@ export default function Admin() {
 
               <div className={styles.formGroup}>
                 <label htmlFor="audioFile" className={styles.label}>
-                  Audio File (Optional)
+                  Audio File *
                 </label>
                 <div className={styles.fileInputWrapper}>
                   <input
@@ -389,6 +404,7 @@ export default function Admin() {
                     accept="audio/*"
                     className={styles.fileInput}
                     onChange={handleAudioChange}
+                    required
                   />
                   <label htmlFor="audioFile" className={styles.fileLabel}>
                     <Upload size={20} />

@@ -70,9 +70,13 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
+          console.log('Loading tracks from localStorage...');
           const serializedTracks: SerializedTrack[] = JSON.parse(stored);
+          console.log('Found', serializedTracks.length, 'stored tracks');
+          
           const deserializedTracks: Track[] = await Promise.all(
             serializedTracks.map(async (track) => {
+              console.log('Deserializing track:', track.title, '- Has audioDataUrl:', !!track.audioDataUrl);
               const result: Track = {
                 ...track,
               };
@@ -88,13 +92,16 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
                 result.audioUrl = track.audioDataUrl;
                 const blob = await fetch(track.audioDataUrl).then(r => r.blob());
                 result.audioFile = new File([blob], 'audio.mp3', { type: blob.type });
+                console.log('Restored audio URL for', track.title);
               }
 
               return result;
             })
           );
+          console.log('Loaded', deserializedTracks.length, 'user tracks');
           setTracks([...deserializedTracks, ...mockTracks]);
         } else {
+          console.log('No stored tracks found, using mock tracks only');
           setTracks(mockTracks);
         }
       } catch (error) {
@@ -115,6 +122,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       try {
         // Filter out mock tracks and serialize user-added tracks
         const userTracks = tracks.filter(t => !mockTracks.find(mt => mt.id === t.id));
+        console.log('Saving', userTracks.length, 'user tracks to localStorage');
+        
         const serializedTracks: SerializedTrack[] = await Promise.all(
           userTracks.map(async (track) => {
             const serialized: SerializedTrack = {
@@ -139,10 +148,12 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
               serialized.audioDataUrl = await fileToDataUrl(track.audioFile);
             }
 
+            console.log('Serialized track:', track.title, '- Has audio URL:', !!serialized.audioUrl, 'Has audioDataUrl:', !!serialized.audioDataUrl);
             return serialized;
           })
         );
         localStorage.setItem(STORAGE_KEY, JSON.stringify(serializedTracks));
+        console.log('Tracks saved to localStorage');
       } catch (error) {
         console.error('Failed to save tracks to storage:', error);
       }
@@ -156,7 +167,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setIsPlaying(true);
 
     // Extract colors and update background
-    const coverUrl = track.coverUrl || (track.coverFile ? URL.createObjectURL(track.coverFile) : '');
+    const coverUrl = track.coverUrl;
     if (coverUrl) {
       try {
         const colors = await extractColorsFromImage(coverUrl);
@@ -169,10 +180,19 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
     // Play audio
     if (audioRef.current) {
-      const audioUrl = track.audioUrl || (track.audioFile ? URL.createObjectURL(track.audioFile) : '');
+      // Use audioUrl directly (it's already a data URL for uploaded tracks)
+      const audioUrl = track.audioUrl;
       if (audioUrl) {
+        console.log('Playing audio from:', audioUrl.substring(0, 50) + '...');
         audioRef.current.src = audioUrl;
-        audioRef.current.play().catch(err => console.error('Playback error:', err));
+        try {
+          await audioRef.current.play();
+          console.log('Audio playback started successfully');
+        } catch (err) {
+          console.error('Playback error:', err);
+        }
+      } else {
+        console.error('No audio URL available for track:', track.title);
       }
     }
   }, []);
@@ -206,13 +226,18 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     const newTrack = { ...track };
     
     if (track.coverFile && !track.coverUrl) {
+      console.log('Converting cover file to data URL...');
       newTrack.coverUrl = await fileToDataUrl(track.coverFile);
+      console.log('Cover data URL created:', newTrack.coverUrl.substring(0, 50));
     }
     
     if (track.audioFile && !track.audioUrl) {
+      console.log('Converting audio file to data URL...');
       newTrack.audioUrl = await fileToDataUrl(track.audioFile);
+      console.log('Audio data URL created:', newTrack.audioUrl.substring(0, 50));
     }
     
+    console.log('Adding track to state:', newTrack.title, 'Has audio URL:', !!newTrack.audioUrl);
     setTracks((prev) => [newTrack, ...prev]);
   }, []);
 

@@ -31,6 +31,12 @@ export function MusicCard({ track, className }: MusicCardProps) {
   }, [track.coverUrl, track.coverFile]);
 
   const handlePlay = () => {
+    console.log('Playing track:', track.title);
+    console.log('Has audioUrl:', !!track.audioUrl);
+    console.log('Has audioFile:', !!track.audioFile);
+    if (track.audioUrl) {
+      console.log('Audio URL type:', track.audioUrl.substring(0, 20));
+    }
     playTrack(track);
   };
 
