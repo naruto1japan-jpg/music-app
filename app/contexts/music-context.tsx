@@ -330,11 +330,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         audioRef.current.pause();
         audioRef.current.src = '';
       }
-      // Small delay to ensure cleanup before setting new video
-      setTimeout(() => {
-        setYoutubeVideoId(track.youtubeVideoId!);
-        setDuration(track.duration);
-      }, 50);
+      setYoutubeVideoId(track.youtubeVideoId!);
+      setDuration(track.duration);
     } else {
       // Regular audio track
       setYoutubeVideoId(null);
