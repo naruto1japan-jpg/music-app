@@ -1,9 +1,11 @@
 import React from "react";
 import type { Route } from "./+types/admin";
-import { Settings, Plus, Edit, Trash2 } from "lucide-react";
+import { Settings, Plus, Edit, Trash2, Upload, Music } from "lucide-react";
 import { Header } from "~/components/header/header";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
-import { mockTracks, GENRES, type Track } from "~/data/music";
+import { GENRES, type Track } from "~/data/music";
+import { useMusic } from "~/contexts/music-context";
+import { searchGaanaTracks } from "~/services/gaana-api";
 import { useToast } from "~/hooks/use-toast";
 import styles from "./admin.module.css";
 
@@ -19,28 +21,130 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Admin() {
   const { toast } = useToast();
-  const [tracks, setTracks] = React.useState<Track[]>(mockTracks);
+  const { tracks, addTrack, deleteTrack } = useMusic();
   const [formData, setFormData] = React.useState({
     title: "",
     artist: "",
     album: "",
     genre: "Pop",
     duration: "",
-    coverUrl: "",
+    gaanaSearch: "",
   });
+  const [coverFile, setCoverFile] = React.useState<File | null>(null);
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = React.useState<string>("");
+  const [isSearchingGaana, setIsSearchingGaana] = React.useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Error",
+          description: "Please select a valid image file",
+          variant: "destructive",
+        });
+        return;
+      }
+      setCoverFile(file);
+      setCoverPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('audio/')) {
+        toast({
+          title: "Error",
+          description: "Please select a valid audio file",
+          variant: "destructive",
+        });
+        return;
+      }
+      setAudioFile(file);
+    }
+  };
+
+  const handleGaanaSearch = async () => {
+    if (!formData.gaanaSearch.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a search query",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSearchingGaana(true);
+    try {
+      const results = await searchGaanaTracks(formData.gaanaSearch, 1);
+      if (results.tracks.length > 0) {
+        const gaanaTrack = results.tracks[0];
+        setFormData((prev) => ({
+          ...prev,
+          title: gaanaTrack.title,
+          artist: gaanaTrack.artist,
+          album: gaanaTrack.album,
+          duration: gaanaTrack.duration.toString(),
+        }));
+        
+        // Download and set cover art
+        if (gaanaTrack.artwork) {
+          try {
+            const response = await fetch(gaanaTrack.artwork);
+            const blob = await response.blob();
+            const file = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
+            setCoverFile(file);
+            setCoverPreview(gaanaTrack.artwork);
+          } catch (err) {
+            console.error('Failed to download cover art:', err);
+          }
+        }
+
+        toast({
+          title: "Success",
+          description: "Track details loaded from Gaana",
+        });
+      } else {
+        toast({
+          title: "Not Found",
+          description: "No results found on Gaana",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to search Gaana",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearchingGaana(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.artist || !formData.album || !formData.duration || !formData.coverUrl) {
+    if (!formData.title || !formData.artist || !formData.album || !formData.duration) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!coverFile) {
+      toast({
+        title: "Error",
+        description: "Please select a cover image",
         variant: "destructive",
       });
       return;
@@ -53,20 +157,24 @@ export default function Admin() {
       album: formData.album,
       genre: formData.genre,
       duration: parseInt(formData.duration, 10),
-      coverUrl: formData.coverUrl,
-      audioUrl: "",
+      coverFile: coverFile,
+      audioFile: audioFile || undefined,
       featured: false,
     };
 
-    setTracks((prev) => [newTrack, ...prev]);
+    addTrack(newTrack);
+    
     setFormData({
       title: "",
       artist: "",
       album: "",
       genre: "Pop",
       duration: "",
-      coverUrl: "",
+      gaanaSearch: "",
     });
+    setCoverFile(null);
+    setAudioFile(null);
+    setCoverPreview("");
 
     toast({
       title: "Success",
@@ -75,7 +183,7 @@ export default function Admin() {
   };
 
   const handleDelete = (id: string) => {
-    setTracks((prev) => prev.filter((track) => track.id !== id));
+    deleteTrack(id);
     toast({
       title: "Deleted",
       description: "Music track removed successfully",
@@ -97,6 +205,32 @@ export default function Admin() {
         <div className={styles.content}>
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Add New Music</h3>
+            
+            <div className={styles.gaanaSection}>
+              <h4 className={styles.gaanaTitle}>
+                <Music size={20} />
+                Search on Gaana
+              </h4>
+              <div className={styles.gaanaSearch}>
+                <input
+                  type="text"
+                  name="gaanaSearch"
+                  className={styles.input}
+                  placeholder="Search for a song on Gaana..."
+                  value={formData.gaanaSearch}
+                  onChange={handleInputChange}
+                />
+                <button
+                  type="button"
+                  className={styles.gaanaButton}
+                  onClick={handleGaanaSearch}
+                  disabled={isSearchingGaana}
+                >
+                  {isSearchingGaana ? "Searching..." : "Search"}
+                </button>
+              </div>
+            </div>
+
             <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.formGroup}>
                 <label htmlFor="title" className={styles.label}>
@@ -184,19 +318,45 @@ export default function Admin() {
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="coverUrl" className={styles.label}>
-                  Cover Image URL *
+                <label htmlFor="coverFile" className={styles.label}>
+                  Cover Image *
                 </label>
-                <input
-                  type="url"
-                  id="coverUrl"
-                  name="coverUrl"
-                  className={styles.input}
-                  placeholder="https://example.com/cover.jpg"
-                  value={formData.coverUrl}
-                  onChange={handleInputChange}
-                  required
-                />
+                <div className={styles.fileInputWrapper}>
+                  <input
+                    type="file"
+                    id="coverFile"
+                    accept="image/*"
+                    className={styles.fileInput}
+                    onChange={handleCoverChange}
+                    required
+                  />
+                  <label htmlFor="coverFile" className={styles.fileLabel}>
+                    <Upload size={20} />
+                    {coverFile ? coverFile.name : "Choose cover image"}
+                  </label>
+                </div>
+                {coverPreview && (
+                  <img src={coverPreview} alt="Cover preview" className={styles.coverPreview} />
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="audioFile" className={styles.label}>
+                  Audio File (Optional)
+                </label>
+                <div className={styles.fileInputWrapper}>
+                  <input
+                    type="file"
+                    id="audioFile"
+                    accept="audio/*"
+                    className={styles.fileInput}
+                    onChange={handleAudioChange}
+                  />
+                  <label htmlFor="audioFile" className={styles.fileLabel}>
+                    <Upload size={20} />
+                    {audioFile ? audioFile.name : "Choose audio file"}
+                  </label>
+                </div>
               </div>
 
               <button type="submit" className={styles.submitButton}>
@@ -209,9 +369,11 @@ export default function Admin() {
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Music Library ({tracks.length})</h3>
             <div className={styles.musicList}>
-              {tracks.map((track) => (
+              {tracks.map((track) => {
+                const coverUrl = track.coverUrl || (track.coverFile ? URL.createObjectURL(track.coverFile) : '');
+                return (
                 <div key={track.id} className={styles.musicItem}>
-                  <img src={track.coverUrl} alt={track.title} className={styles.musicCover} />
+                  <img src={coverUrl} alt={track.title} className={styles.musicCover} />
                   <div className={styles.musicInfo}>
                     <h4 className={styles.musicTitle}>{track.title}</h4>
                     <p className={styles.musicArtist}>
@@ -231,7 +393,8 @@ export default function Admin() {
                     </button>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
         </div>

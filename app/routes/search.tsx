@@ -5,6 +5,7 @@ import { Header } from "~/components/header/header";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
 import { mockTracks, GENRES, type Genre } from "~/data/music";
+import { useMusic } from "~/contexts/music-context";
 import styles from "./search.module.css";
 
 export function meta({}: Route.MetaArgs) {
@@ -18,19 +19,26 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Search() {
+  const { tracks: userTracks, backgroundGradient } = useMusic();
   const [activeTab, setActiveTab] = React.useState<"search" | "categories">("search");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedGenre, setSelectedGenre] = React.useState<Genre>("All");
   const [searchResults, setSearchResults] = React.useState(mockTracks);
 
+  React.useEffect(() => {
+    document.documentElement.style.setProperty('--dynamic-background', backgroundGradient);
+  }, [backgroundGradient]);
+
+  const allTracks = userTracks.length > 0 ? [...userTracks, ...mockTracks] : mockTracks;
+
   const handleSearch = () => {
     if (!searchQuery.trim()) {
-      setSearchResults(mockTracks);
+      setSearchResults(allTracks);
       return;
     }
 
     const query = searchQuery.toLowerCase();
-    const filtered = mockTracks.filter(
+    const filtered = allTracks.filter(
       (track) =>
         track.title.toLowerCase().includes(query) ||
         track.artist.toLowerCase().includes(query) ||
@@ -42,9 +50,9 @@ export default function Search() {
   const handleCategorySelect = (genre: Genre) => {
     setSelectedGenre(genre);
     if (genre === "All") {
-      setSearchResults(mockTracks);
+      setSearchResults(allTracks);
     } else {
-      const filtered = mockTracks.filter((track) => track.genre === genre);
+      const filtered = allTracks.filter((track) => track.genre === genre);
       setSearchResults(filtered);
     }
   };

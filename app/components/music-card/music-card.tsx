@@ -17,6 +17,7 @@ function formatDuration(seconds: number): string {
 
 export function MusicCard({ track, className }: MusicCardProps) {
   const { playTrack } = useMusic();
+  const coverUrl = track.coverUrl || (track.coverFile ? URL.createObjectURL(track.coverFile) : '');
 
   const handlePlay = () => {
     playTrack(track);
@@ -25,7 +26,7 @@ export function MusicCard({ track, className }: MusicCardProps) {
   return (
     <div className={classNames(styles.card, className)} onClick={handlePlay}>
       <div className={styles.coverContainer}>
-        <img src={track.coverUrl} alt={`${track.title} cover`} className={styles.cover} />
+        <img src={coverUrl} alt={`${track.title} cover`} className={styles.cover} />
         <div className={styles.playOverlay}>
           <button className={styles.playButton} aria-label="Play track">
             <Play className={styles.playIcon} size={24} fill="currentColor" />

@@ -15,11 +15,13 @@ export function MiniPlayer() {
     );
   }
 
+  const coverUrl = currentTrack.coverUrl || (currentTrack.coverFile ? URL.createObjectURL(currentTrack.coverFile) : '');
+
   return (
     <div className={styles.player}>
       <div className={styles.container}>
         <div className={styles.trackInfo}>
-          <img src={currentTrack.coverUrl} alt={`${currentTrack.title} cover`} className={styles.cover} />
+          <img src={coverUrl} alt={`${currentTrack.title} cover`} className={styles.cover} />
           <div className={styles.details}>
             <h4 className={styles.title}>{currentTrack.title}</h4>
             <p className={styles.artist}>{currentTrack.artist}</p>

@@ -5,8 +5,11 @@ export interface Track {
   album: string;
   genre: string;
   duration: number;
-  coverUrl: string;
-  audioUrl: string;
+  coverFile?: File;
+  coverUrl?: string;
+  audioFile?: File;
+  audioUrl?: string;
+  gaanaTrackId?: string;
   featured?: boolean;
 }
 
