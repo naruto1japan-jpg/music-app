@@ -52,9 +52,7 @@ export function MiniPlayer() {
 
 
 
-  if (!currentTrack) {
-    return null;
-  }
+  const showDefault = !currentTrack;
 
   const getMeshGradientStyle = (): React.CSSProperties => {
     if (!dominantColors) return {};
@@ -107,55 +105,78 @@ export function MiniPlayer() {
       {/* Mini Player Bar */}
       <div 
         className={styles.player} 
-        onClick={() => setIsExpanded(true)}
-        style={getMeshGradientStyle()}
+        onClick={() => !showDefault && setIsExpanded(true)}
+        style={showDefault ? {} : getMeshGradientStyle()}
       >
         <div className={styles.container}>
-          <div className={styles.trackInfo}>
-            <img src={coverUrl} alt={`${currentTrack.title} cover`} className={styles.cover} />
-            <div className={styles.details}>
-              <h4 className={styles.title}>{currentTrack.title}</h4>
-              <p className={styles.artist}>{currentTrack.artist}</p>
-            </div>
-          </div>
-          <div className={styles.controls}>
-            <button 
-              className={`${styles.iconButton} ${isDrivingMode ? styles.active : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleDrivingMode();
-              }}
-              aria-label="Driving mode"
-              title="Driving Mode"
-            >
-              <Car size={20} />
-            </button>
-            <button 
-              className={styles.controlButton} 
-              onClick={(e) => {
-                e.stopPropagation();
-                togglePlayPause();
-              }} 
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
-            </button>
-            <button 
-              className={styles.expandButton}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsExpanded(true);
-              }}
-              aria-label="Expand player"
-            >
-              <ChevronUp size={20} />
-            </button>
-          </div>
+          {showDefault ? (
+            <>
+              <div className={styles.trackInfo}>
+                <div className={styles.cover} style={{ background: 'var(--color-accent-9)' }} />
+                <div className={styles.details}>
+                  <h4 className={styles.title}>No track playing</h4>
+                  <p className={styles.artist}>Select a song to start</p>
+                </div>
+              </div>
+              <div className={styles.controls}>
+                <button 
+                  className={styles.controlButton} 
+                  disabled
+                  aria-label="Play"
+                >
+                  <Play size={24} fill="currentColor" />
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.trackInfo}>
+                <img src={coverUrl} alt={`${currentTrack.title} cover`} className={styles.cover} />
+                <div className={styles.details}>
+                  <h4 className={styles.title}>{currentTrack.title}</h4>
+                  <p className={styles.artist}>{currentTrack.artist}</p>
+                </div>
+              </div>
+              <div className={styles.controls}>
+                <button 
+                  className={`${styles.iconButton} ${isDrivingMode ? styles.active : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleDrivingMode();
+                  }}
+                  aria-label="Driving mode"
+                  title="Driving Mode"
+                >
+                  <Car size={20} />
+                </button>
+                <button 
+                  className={styles.controlButton} 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlayPause();
+                  }} 
+                  aria-label={isPlaying ? "Pause" : "Play"}
+                >
+                  {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
+                </button>
+                <button 
+                  className={styles.expandButton}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(true);
+                  }}
+                  aria-label="Expand player"
+                >
+                  <ChevronUp size={20} />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {/* Expanded Player */}
-      {isExpanded && (
+      {isExpanded && currentTrack && (
         <div className={styles.expandedPlayer} style={getExpandedGradientStyle()}>
           <div className={styles.expandedContainer}>
             <button 
