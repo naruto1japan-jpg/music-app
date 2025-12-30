@@ -1,15 +1,15 @@
 /* Typography */
 html {
-  --font-display: 900 var(--font-size-fluid-3) var(--font-transitional);
-  --font-heading: 600 var(--font-size-fluid-2) var(--font-transitional);
-  --font-subheading: 400 var(--font-size-fluid-1) var(--font-system-ui);
-  --font-body: var(--font-size-fluid-0) var(--font-system-ui);
-  --font-caption: var(--font-size-fluid-0) var(--font-system-ui);
+  --font-display: 700 var(--font-size-fluid-3) var(--font-neo-grotesque);
+  --font-heading: 600 var(--font-size-fluid-2) var(--font-neo-grotesque);
+  --font-subheading: 500 var(--font-size-fluid-1) var(--font-neo-grotesque);
+  --font-body: var(--font-size-fluid-0) var(--font-neo-grotesque);
+  --font-caption: var(--font-size-0) var(--font-neo-grotesque);
   --font-code: var(--font-size-fluid-0) var(--font-monospace-code);
 }
 
 html {
-  /* Neutral colors */
+  /* Neutral colors - Deep sophisticated background */
   --color-neutral-1: var(--slate-1);
   --color-neutral-2: var(--slate-2);
   --color-neutral-3: var(--slate-3);
@@ -24,20 +24,20 @@ html {
   --color-neutral-12: var(--slate-12);
   --color-neutral-contrast: var(--slate-contrast);
 
-  /* Accent colors */
-  --color-accent-1: var(--blue-1);
-  --color-accent-2: var(--blue-2);
-  --color-accent-3: var(--blue-3);
-  --color-accent-4: var(--blue-4);
-  --color-accent-5: var(--blue-5);
-  --color-accent-6: var(--blue-6);
-  --color-accent-7: var(--blue-7);
-  --color-accent-8: var(--blue-8);
-  --color-accent-9: var(--blue-9);
-  --color-accent-10: var(--blue-10);
-  --color-accent-11: var(--blue-11);
-  --color-accent-12: var(--blue-12);
-  --color-accent-contrast: var(--blue-contrast);
+  /* Accent colors - Vibrant cyan for interactions */
+  --color-accent-1: var(--cyan-1);
+  --color-accent-2: var(--cyan-2);
+  --color-accent-3: var(--cyan-3);
+  --color-accent-4: var(--cyan-4);
+  --color-accent-5: var(--cyan-5);
+  --color-accent-6: var(--cyan-6);
+  --color-accent-7: var(--cyan-7);
+  --color-accent-8: var(--cyan-8);
+  --color-accent-9: var(--cyan-9);
+  --color-accent-10: var(--cyan-10);
+  --color-accent-11: var(--cyan-11);
+  --color-accent-12: var(--cyan-12);
+  --color-accent-contrast: var(--cyan-contrast);
 
   /* Error colors */
   --color-error-1: var(--red-1);
@@ -68,4 +68,19 @@ html {
   --color-success-11: var(--green-11);
   --color-success-12: var(--green-12);
   --color-success-contrast: var(--green-contrast);
+
+  /* Brand color - Violet for identity */
+  --color-brand-1: var(--violet-1);
+  --color-brand-2: var(--violet-2);
+  --color-brand-3: var(--violet-3);
+  --color-brand-4: var(--violet-4);
+  --color-brand-5: var(--violet-5);
+  --color-brand-6: var(--violet-6);
+  --color-brand-7: var(--violet-7);
+  --color-brand-8: var(--violet-8);
+  --color-brand-9: var(--violet-9);
+  --color-brand-10: var(--violet-10);
+  --color-brand-11: var(--violet-11);
+  --color-brand-12: var(--violet-12);
+  --color-brand-contrast: var(--violet-contrast);
 }

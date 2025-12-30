@@ -3,6 +3,7 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration }
 import type { Route } from "./+types/root";
 import { Toaster } from "./components/ui/toaster/toaster";
 import colorSchemeApi from "@dazl/color-scheme/client?url";
+import { MusicProvider } from "./contexts/music-context";
 
 import "./styles/reset.css";
 import "./styles/global.css";
@@ -56,7 +57,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <MusicProvider>
+      <Outlet />
+    </MusicProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

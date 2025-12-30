@@ -1,0 +1,221 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-neutral-1);
+  padding-bottom: 120px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+.header {
+  margin-bottom: var(--space-8);
+}
+
+.title {
+  font: var(--font-display);
+  color: var(--color-neutral-12);
+  margin: 0 0 var(--space-6) 0;
+  letter-spacing: var(--font-letterspacing-0);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-neutral-6);
+}
+
+.tab {
+  padding: var(--space-3) var(--space-5);
+  background: transparent;
+  border: none;
+  color: var(--color-neutral-11);
+  font: var(--font-subheading);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tab:hover {
+  color: var(--color-neutral-12);
+}
+
+.tab[data-active="true"] {
+  color: var(--color-accent-11);
+  border-bottom-color: var(--color-accent-9);
+}
+
+.tabIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.searchSection {
+  margin-bottom: var(--space-8);
+}
+
+.searchBar {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.searchInput {
+  flex: 1;
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-neutral-2);
+  border: 1px solid var(--color-neutral-6);
+  border-radius: var(--radius-3);
+  color: var(--color-neutral-12);
+  font: var(--font-body);
+  transition: all 0.2s var(--ease-out);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-accent-9);
+  box-shadow: 0 0 0 3px var(--color-accent-3);
+}
+
+.searchInput::placeholder {
+  color: var(--color-neutral-9);
+}
+
+.searchButton {
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-accent-9);
+  color: var(--color-accent-contrast);
+  border: none;
+  border-radius: var(--radius-3);
+  font: var(--font-subheading);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.searchButton:hover {
+  background: var(--color-accent-10);
+  transform: translateY(-1px);
+}
+
+.searchButton:active {
+  transform: translateY(0);
+}
+
+.categorySection {
+  margin-bottom: var(--space-8);
+}
+
+.categoryLabel {
+  font: var(--font-subheading);
+  color: var(--color-neutral-11);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.categoryButton {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-neutral-2);
+  border: 1px solid var(--color-neutral-6);
+  border-radius: var(--radius-2);
+  color: var(--color-neutral-11);
+  font: var(--font-body);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  text-align: center;
+}
+
+.categoryButton:hover {
+  background: var(--color-neutral-3);
+  border-color: var(--color-neutral-7);
+  color: var(--color-neutral-12);
+}
+
+.categoryButton[data-active="true"] {
+  background: var(--color-accent-3);
+  border-color: var(--color-accent-9);
+  color: var(--color-accent-11);
+}
+
+.resultsSection {
+  margin-top: var(--space-8);
+}
+
+.resultsHeader {
+  margin-bottom: var(--space-6);
+}
+
+.resultsTitle {
+  font: var(--font-heading);
+  color: var(--color-neutral-12);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.resultsCount {
+  font: var(--font-body);
+  color: var(--color-neutral-10);
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-6);
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--space-9);
+  background: var(--color-neutral-2);
+  border-radius: var(--radius-3);
+  border: 1px dashed var(--color-neutral-6);
+}
+
+.emptyIcon {
+  color: var(--color-accent-9);
+  margin-bottom: var(--space-4);
+}
+
+.emptyTitle {
+  font: var(--font-heading);
+  color: var(--color-neutral-12);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.emptyText {
+  font: var(--font-body);
+  color: var(--color-neutral-10);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .searchBar {
+    flex-direction: column;
+  }
+
+  .categoryGrid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-4);
+  }
+}

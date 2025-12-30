@@ -1,0 +1,99 @@
+.header {
+  background: var(--color-neutral-1);
+  border-bottom: 1px solid var(--color-neutral-6);
+  padding: var(--space-4) var(--space-6);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: var(--color-neutral-12);
+  transition: color 0.2s var(--ease-out);
+}
+
+.logo:hover {
+  color: var(--color-brand-11);
+}
+
+.logoIcon {
+  color: var(--color-brand-9);
+}
+
+.logoText {
+  font: var(--font-heading);
+  margin: 0;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.navLink {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-2);
+  text-decoration: none;
+  color: var(--color-neutral-11);
+  font: var(--font-body);
+  transition: all 0.2s var(--ease-out);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.navLink:hover {
+  background: var(--color-neutral-3);
+  color: var(--color-neutral-12);
+}
+
+.navLink[data-active="true"] {
+  background: var(--color-accent-3);
+  color: var(--color-accent-11);
+}
+
+.navIcon {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .container {
+    gap: var(--space-4);
+  }
+
+  .logoText {
+    display: none;
+  }
+
+  .nav {
+    gap: var(--space-1);
+  }
+
+  .navLink {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .navLinkText {
+    display: none;
+  }
+}

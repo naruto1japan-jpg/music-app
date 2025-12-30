@@ -1,0 +1,232 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-neutral-12);
+  padding-bottom: 120px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+.header {
+  margin-bottom: var(--space-8);
+}
+
+.title {
+  font: var(--font-display);
+  color: var(--color-neutral-1);
+  margin: 0 0 var(--space-3) 0;
+  letter-spacing: var(--font-letterspacing-0);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.titleIcon {
+  color: var(--color-brand-9);
+}
+
+.subtitle {
+  font: var(--font-subheading);
+  color: var(--color-neutral-4);
+  margin: 0;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+}
+
+.section {
+  background: var(--color-neutral-1);
+  border-radius: var(--radius-4);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-2);
+}
+
+.sectionTitle {
+  font: var(--font-heading);
+  color: var(--color-neutral-12);
+  margin: 0 0 var(--space-6) 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font: var(--font-body);
+  font-weight: 500;
+  color: var(--color-neutral-11);
+}
+
+.input,
+.select {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-neutral-2);
+  border: 1px solid var(--color-neutral-6);
+  border-radius: var(--radius-2);
+  color: var(--color-neutral-12);
+  font: var(--font-body);
+  transition: all 0.2s var(--ease-out);
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--color-accent-9);
+  box-shadow: 0 0 0 3px var(--color-accent-3);
+}
+
+.input::placeholder {
+  color: var(--color-neutral-9);
+}
+
+.submitButton {
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-accent-9);
+  color: var(--color-accent-contrast);
+  border: none;
+  border-radius: var(--radius-3);
+  font: var(--font-subheading);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.submitButton:hover {
+  background: var(--color-accent-10);
+  transform: translateY(-1px);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+}
+
+.musicList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.musicItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-neutral-2);
+  border-radius: var(--radius-2);
+  border: 1px solid var(--color-neutral-4);
+  transition: all 0.2s var(--ease-out);
+}
+
+.musicItem:hover {
+  border-color: var(--color-neutral-6);
+  box-shadow: var(--shadow-1);
+}
+
+.musicCover {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-2);
+  object-fit: cover;
+  background: var(--color-neutral-3);
+}
+
+.musicInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.musicTitle {
+  font: var(--font-subheading);
+  color: var(--color-neutral-12);
+  margin: 0 0 var(--space-1) 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.musicArtist {
+  font: var(--font-body);
+  color: var(--color-neutral-10);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.musicActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.actionButton {
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-neutral-6);
+  border-radius: var(--radius-2);
+  color: var(--color-neutral-11);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.actionButton:hover {
+  background: var(--color-neutral-3);
+  border-color: var(--color-neutral-7);
+}
+
+.deleteButton {
+  color: var(--color-error-11);
+  border-color: var(--color-error-6);
+}
+
+.deleteButton:hover {
+  background: var(--color-error-3);
+  border-color: var(--color-error-7);
+}
+
+@media (max-width: 1024px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .section {
+    padding: var(--space-4);
+  }
+
+  .musicItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .musicActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
