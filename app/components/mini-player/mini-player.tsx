@@ -1,12 +1,10 @@
 import React from "react";
 import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronUp, ChevronDown, ListMusic, Car, X, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router";
 import { useMusic } from "~/contexts/music-context";
 import { extractColorsFromImage, type DominantColors } from "~/utils/color-extractor";
 import styles from "./mini-player.module.css";
 
 export function MiniPlayer() {
-  const navigate = useNavigate();
   const { 
     currentTrack, 
     isPlaying, 
@@ -107,7 +105,7 @@ export function MiniPlayer() {
       {/* Mini Player Bar */}
       <div 
         className={styles.player} 
-        onClick={() => !showDefault && navigate('/player')}
+        onClick={() => !showDefault && setIsExpanded(true)}
         style={showDefault ? {} : getMeshGradientStyle()}
       >
         <div className={styles.container}>
