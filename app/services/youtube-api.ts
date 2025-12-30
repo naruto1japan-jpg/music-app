@@ -124,7 +124,11 @@ export async function searchYouTube(
     }
 
     const searchUrl = `${YOUTUBE_API_BASE}/search?${searchParams}`;
-    console.log('Fetching from YouTube API...');
+    console.log('YouTube API Request:', {
+      url: searchUrl.replace(YOUTUBE_API_KEY, 'API_KEY_HIDDEN'),
+      query,
+      maxResults
+    });
     
     const searchResponse = await fetch(searchUrl);
     
@@ -136,12 +140,34 @@ export async function searchYouTube(
         body: errorText
       });
       
+      let errorMessage = `YouTube API request failed: ${searchResponse.status}`;
+      
       try {
         const error = JSON.parse(errorText);
-        throw new Error(error.error?.message || 'Failed to search YouTube');
+        const apiError = error.error;
+        
+        if (apiError) {
+          errorMessage = apiError.message || errorMessage;
+          
+          // Provide helpful messages for common errors
+          if (searchResponse.status === 400) {
+            if (apiError.message?.includes('API key')) {
+              errorMessage = 'Invalid YouTube API key. Please check your API key configuration.';
+            } else if (apiError.errors) {
+              const reasons = apiError.errors.map((e: any) => e.reason).join(', ');
+              errorMessage = `YouTube API error: ${reasons}. ${apiError.message}`;
+            }
+          } else if (searchResponse.status === 403) {
+            errorMessage = 'YouTube API quota exceeded or API key lacks required permissions. Enable YouTube Data API v3 in Google Cloud Console.';
+          }
+          
+          console.error('Detailed API Error:', apiError);
+        }
       } catch (e) {
-        throw new Error(`YouTube API request failed: ${searchResponse.status} ${searchResponse.statusText}`);
+        // Error text is not JSON
       }
+      
+      throw new Error(errorMessage);
     }
 
     const searchData = await searchResponse.json();
