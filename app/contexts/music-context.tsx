@@ -40,6 +40,7 @@ interface SerializedTrack {
 const MusicContext = React.createContext<MusicContextType | null>(null);
 
 const STORAGE_KEY = 'harmony-flow-tracks';
+const MOCK_TRACK_IDS = new Set<string>();
 
 export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [currentTrack, setCurrentTrack] = React.useState<Track | null>(null);
@@ -52,6 +53,11 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [isLoaded, setIsLoaded] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  // Track mock track IDs on mount
+  React.useEffect(() => {
+    mockTracks.forEach(track => MOCK_TRACK_IDS.add(track.id));
+  }, []);
 
   // Initialize audio element
   React.useEffect(() => {
@@ -121,8 +127,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
     const saveTracks = async () => {
       try {
-        // Filter out mock tracks and serialize user-added tracks
-        const userTracks = tracks.filter(t => !mockTracks.find(mt => mt.id === t.id));
+        // Filter out mock tracks using the Set of IDs
+        const userTracks = tracks.filter(t => !MOCK_TRACK_IDS.has(t.id));
         console.log('Saving', userTracks.length, 'user tracks to localStorage');
         
         const serializedTracks: SerializedTrack[] = await Promise.all(
