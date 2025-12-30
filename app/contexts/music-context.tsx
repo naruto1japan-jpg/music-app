@@ -99,14 +99,15 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
             })
           );
           console.log('Loaded', deserializedTracks.length, 'user tracks');
+          // User tracks first, then mock tracks (so user tracks appear at the top)
           setTracks([...deserializedTracks, ...mockTracks]);
         } else {
           console.log('No stored tracks found, using mock tracks only');
-          setTracks(mockTracks);
+          setTracks([...mockTracks]);
         }
       } catch (error) {
         console.error('Failed to load tracks from storage:', error);
-        setTracks(mockTracks);
+        setTracks([...mockTracks]);
       }
       setIsLoaded(true);
     };
@@ -252,7 +253,12 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteTrack = React.useCallback((id: string) => {
-    setTracks((prev) => prev.filter((t) => t.id !== id));
+    console.log('Deleting track:', id);
+    setTracks((prev) => {
+      const filtered = prev.filter((t) => t.id !== id);
+      console.log('Tracks after deletion:', filtered.length);
+      return filtered;
+    });
   }, []);
 
   const nextTrack = React.useCallback(() => {
