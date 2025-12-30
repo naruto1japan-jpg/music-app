@@ -20,9 +20,7 @@ const YT_STATES = {
   CUED: 5,
 };
 
-let audioUnlocked = false;
 let mediaSession: MediaSession | null = null;
-let keepAliveInterval: number | null = null;
 
 // Initialize Media Session API for background playback control
 if ('mediaSession' in navigator) {
@@ -33,10 +31,13 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
   const playerRef = React.useRef<any>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const timeUpdateIntervalRef = React.useRef<number | null>(null);
-  const [showUnlock, setShowUnlock] = React.useState(!audioUnlocked);
+  const keepAliveIntervalRef = React.useRef<number | null>(null);
+  const [audioUnlocked, setAudioUnlocked] = React.useState(false);
+  const [showUnlock, setShowUnlock] = React.useState(false);
   const videoInfoRef = React.useRef<{ title: string; artist: string; thumbnail: string } | null>(null);
   const retryCountRef = React.useRef(0);
   const maxRetries = 3;
+  const playerInitializedRef = React.useRef(false);
 
   // Load YouTube IFrame API
   React.useEffect(() => {
@@ -90,7 +91,7 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
         videoId,
         playerVars: {
           autoplay: 1,
-          mute: audioUnlocked ? 0 : 1, // Start muted unless audio is unlocked
+          mute: 1, // Always start muted to comply with browser autoplay policies
           controls: 0,
           disablekb: 1,
           fs: 0,
@@ -101,10 +102,24 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
         },
         events: {
           onReady: (event: any) => {
-            console.log('YouTube player ready');
+            console.log('YouTube player ready for videoId:', videoId);
+            playerInitializedRef.current = true;
             onPlayerReady?.(event.target);
             setupMediaSession(event.target);
             onReady?.();
+            
+            // Show unlock overlay on first ready
+            if (!audioUnlocked) {
+              setShowUnlock(true);
+            } else {
+              // If audio was already unlocked (from previous video), unmute immediately
+              try {
+                event.target.unMute();
+                event.target.setVolume(100);
+              } catch (error) {
+                console.error('Error unmuting on ready:', error);
+              }
+            }
           },
           onStateChange: (event: any) => {
             console.log('YouTube player state:', event.data);
@@ -148,12 +163,17 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
     return () => {
       stopTimeUpdateInterval();
       stopKeepAlive();
+      playerInitializedRef.current = false;
       if (playerRef.current) {
-        playerRef.current.destroy();
+        try {
+          playerRef.current.destroy();
+        } catch (error) {
+          console.error('Error destroying player:', error);
+        }
         playerRef.current = null;
       }
     };
-  }, [videoId]);
+  }, [videoId, audioUnlocked]);
 
   // Setup Media Session API for background playback controls
   const setupMediaSession = (player: any) => {
@@ -256,7 +276,7 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
   const startKeepAlive = () => {
     stopKeepAlive();
     
-    keepAliveInterval = window.setInterval(() => {
+    keepAliveIntervalRef.current = window.setInterval(() => {
       if (playerRef.current && isPlaying) {
         try {
           const state = playerRef.current.getPlayerState();
@@ -274,24 +294,27 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
   };
 
   const stopKeepAlive = () => {
-    if (keepAliveInterval) {
-      clearInterval(keepAliveInterval);
-      keepAliveInterval = null;
+    if (keepAliveIntervalRef.current) {
+      clearInterval(keepAliveIntervalRef.current);
+      keepAliveIntervalRef.current = null;
     }
   };
 
   const unlockAudio = () => {
-    if (playerRef.current) {
+    if (playerRef.current && playerInitializedRef.current) {
       try {
         playerRef.current.unMute();
         playerRef.current.setVolume(100);
-        audioUnlocked = true;
+        setAudioUnlocked(true);
         setShowUnlock(false);
+        console.log('Audio unlocked for videoId:', videoId);
         
         // Ensure playback starts after unlocking
-        if (isPlaying) {
-          playerRef.current.playVideo();
-        }
+        setTimeout(() => {
+          if (playerRef.current && isPlaying) {
+            playerRef.current.playVideo();
+          }
+        }, 100);
       } catch (error) {
         console.error('Error unlocking audio:', error);
       }

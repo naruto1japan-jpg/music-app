@@ -270,6 +270,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   }, [tracks, isLoaded]);
 
   const playTrack = React.useCallback(async (track: Track) => {
+    console.log('playTrack called:', track.title, 'YouTube ID:', track.youtubeVideoId);
+    
+    // Stop current playback first
+    if (youtubeVideoId && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+    }
+    
     setCurrentTrack(track);
     setIsPlaying(true);
     setCurrentTime(0);
@@ -316,14 +324,17 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
     // Play audio or video
     if (track.youtubeVideoId) {
-      // YouTube track
-      console.log('Playing YouTube track:', track.youtubeVideoId);
-      setYoutubeVideoId(track.youtubeVideoId);
+      // YouTube track - set videoId first, then update state
+      console.log('Setting YouTube video ID:', track.youtubeVideoId);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = '';
       }
-      setDuration(track.duration);
+      // Small delay to ensure cleanup before setting new video
+      setTimeout(() => {
+        setYoutubeVideoId(track.youtubeVideoId!);
+        setDuration(track.duration);
+      }, 50);
     } else {
       // Regular audio track
       setYoutubeVideoId(null);
@@ -343,14 +354,16 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         }
       }
     }
-  }, []);
+  }, [youtubeVideoId]);
 
   const pauseTrack = React.useCallback(() => {
+    console.log('pauseTrack called');
     setIsPlaying(false);
     // Audio element will pause automatically via useEffect
   }, []);
 
   const resumeTrack = React.useCallback(() => {
+    console.log('resumeTrack called');
     if (currentTrack) {
       setIsPlaying(true);
       // YouTube player will resume automatically via useEffect
