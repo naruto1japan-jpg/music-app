@@ -192,40 +192,31 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
     };
   }, [videoId]);
 
-  // Setup Media Session API for background playback controls
+  // Setup Media Session API for background playback controls and Android notification
   const setupMediaSession = (player: any) => {
     if (!mediaSession) return;
 
     try {
+      const videoData = player.getVideoData();
+      const currentVideoId = videoData.video_id || videoId;
       const info = videoInfoRef.current;
-      const title = info?.title || 'Unknown Track';
-      const artist = info?.artist || 'Unknown Artist';
-      const thumbnailUrl = info?.thumbnail || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      const title = info?.title || videoData.title || 'Unknown Track';
+      const artist = info?.artist || videoData.author || 'My Music App';
 
-      // Set metadata with multiple artwork sizes for better compatibility
+      // Set metadata with optimized artwork sizes for Android notification panel
       mediaSession.metadata = new MediaMetadata({
         title: title,
         artist: artist,
-        album: 'Harmony Flow',
+        album: 'YouTube Stream',
         artwork: [
           { 
-            src: `https://img.youtube.com/vi/${videoId}/default.jpg`, 
-            sizes: '120x90', 
+            src: `https://img.youtube.com/vi/${currentVideoId}/mqdefault.jpg`, 
+            sizes: '96x96', 
             type: 'image/jpeg' 
           },
           { 
-            src: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`, 
-            sizes: '320x180', 
-            type: 'image/jpeg' 
-          },
-          { 
-            src: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`, 
-            sizes: '480x360', 
-            type: 'image/jpeg' 
-          },
-          { 
-            src: thumbnailUrl, 
-            sizes: '512x512', 
+            src: `https://img.youtube.com/vi/${currentVideoId}/sddefault.jpg`, 
+            sizes: '640x480', 
             type: 'image/jpeg' 
           },
         ],
@@ -277,13 +268,15 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
     }
   };
 
-  // Update playback state for Media Session
+  // Update playback state for Media Session and refresh notification
   const updateMediaSessionState = (state: number) => {
-    if (!mediaSession) return;
+    if (!mediaSession || !playerRef.current) return;
 
     try {
       if (state === YT_STATES.PLAYING) {
         mediaSession.playbackState = 'playing';
+        // Update notification with current song info when playback starts
+        setupMediaSession(playerRef.current);
       } else if (state === YT_STATES.PAUSED) {
         mediaSession.playbackState = 'paused';
       } else {
@@ -380,8 +373,11 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
           startSeconds: 0,
           suggestedQuality: 'small'
         });
-        playerRef.current.mute(); // Start muted to bypass restriction
+        playerRef.current.unMute(); // Unmute since user clicked to play
         playerRef.current.playVideo();
+        
+        // Hide the 'Unlock Audio' button since user clicked to play a song
+        setShowUnlockPrompt(false);
       } else {
         // If the player somehow died, just reload
         // rather than showing the "Oops" error
