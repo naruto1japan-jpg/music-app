@@ -74,6 +74,10 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
             artist: data.author_name || 'Unknown Artist',
             thumbnail: data.thumbnail_url || '',
           };
+          // Update Media Session metadata if player is ready
+          if (playerRef.current && mediaSession) {
+            setupMediaSession(playerRef.current);
+          }
         }
       } catch (error) {
         console.warn('Could not fetch video info:', error);
@@ -190,43 +194,84 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
 
   // Setup Media Session API for background playback controls
   const setupMediaSession = (player: any) => {
-    if (!mediaSession || !videoInfoRef.current) return;
+    if (!mediaSession) return;
 
     try {
       const info = videoInfoRef.current;
+      const title = info?.title || 'Unknown Track';
+      const artist = info?.artist || 'Unknown Artist';
+      const thumbnailUrl = info?.thumbnail || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+
+      // Set metadata with multiple artwork sizes for better compatibility
       mediaSession.metadata = new MediaMetadata({
-        title: info.title,
-        artist: info.artist,
+        title: title,
+        artist: artist,
+        album: 'Harmony Flow',
         artwork: [
-          {
-            src: info.thumbnail,
-            sizes: '512x512',
-            type: 'image/jpeg',
+          { 
+            src: `https://img.youtube.com/vi/${videoId}/default.jpg`, 
+            sizes: '120x90', 
+            type: 'image/jpeg' 
+          },
+          { 
+            src: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`, 
+            sizes: '320x180', 
+            type: 'image/jpeg' 
+          },
+          { 
+            src: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`, 
+            sizes: '480x360', 
+            type: 'image/jpeg' 
+          },
+          { 
+            src: thumbnailUrl, 
+            sizes: '512x512', 
+            type: 'image/jpeg' 
           },
         ],
       });
 
-      // Set up action handlers for background controls
+      // Set up action handlers for background controls and notifications
+      // These listeners make the notification buttons (Play/Pause) actually work
       mediaSession.setActionHandler('play', () => {
+        console.log('Media Session: play action');
         player.playVideo();
       });
 
       mediaSession.setActionHandler('pause', () => {
+        console.log('Media Session: pause action');
         player.pauseVideo();
       });
 
       mediaSession.setActionHandler('seekbackward', () => {
+        console.log('Media Session: seekbackward action');
         const currentTime = player.getCurrentTime();
-        player.seekTo(Math.max(0, currentTime - 10));
+        player.seekTo(Math.max(0, currentTime - 10), true);
       });
 
       mediaSession.setActionHandler('seekforward', () => {
+        console.log('Media Session: seekforward action');
         const currentTime = player.getCurrentTime();
         const duration = player.getDuration();
-        player.seekTo(Math.min(duration, currentTime + 10));
+        player.seekTo(Math.min(duration, currentTime + 10), true);
       });
 
-      console.log('Media Session API initialized');
+      // Optional: Add previous/next track handlers if available
+      try {
+        mediaSession.setActionHandler('previoustrack', () => {
+          console.log('Media Session: previoustrack action');
+          // This would be handled by the parent component
+        });
+
+        mediaSession.setActionHandler('nexttrack', () => {
+          console.log('Media Session: nexttrack action');
+          // This would be handled by the parent component
+        });
+      } catch (error) {
+        console.log('Previous/Next track actions not supported');
+      }
+
+      console.log('Media Session API initialized with metadata:', { title, artist });
     } catch (error) {
       console.warn('Failed to setup Media Session:', error);
     }
