@@ -1,3 +1,132 @@
+.queueBar {
+  position: fixed;
+  bottom: 90px;
+  left: 0;
+  right: 0;
+  background: rgba(24, 24, 24, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  z-index: 99;
+  max-height: 200px;
+  overflow: hidden;
+  animation: slideUpBar 0.3s var(--ease-out);
+}
+
+.queueBarContent {
+  padding: var(--space-4);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.queueBarHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.queueBarTitle {
+  font: var(--font-caption);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.queueBarList {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  padding-bottom: var(--space-2);
+}
+
+.queueBarList::-webkit-scrollbar {
+  height: 6px;
+}
+
+.queueBarList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.queueBarList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-round);
+}
+
+.queueBarList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.queueBarItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-3);
+  padding: var(--space-2) var(--space-3);
+  min-width: 250px;
+  transition: all 0.2s var(--ease-out);
+  cursor: pointer;
+}
+
+.queueBarItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.queueBarCover {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-2);
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.queueBarInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.queueBarTrackTitle {
+  font: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queueBarTrackArtist {
+  font: var(--font-caption);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queueBarMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-3);
+  padding: var(--space-4);
+  min-width: 100px;
+  font: var(--font-body);
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+}
+
 .player {
   grid-area: player;
   background: #181818;
@@ -9,6 +138,10 @@
   gap: var(--space-4);
   height: 90px;
   z-index: 100;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 .player::before {
@@ -744,8 +877,27 @@
 }
 
 @media (max-width: 768px) {
+  .queueBar {
+    bottom: 84px;
+    max-height: 150px;
+  }
+  
+  .queueBarContent {
+    padding: var(--space-3);
+  }
+  
+  .queueBarItem {
+    min-width: 200px;
+  }
+  
+  .queueBarCover {
+    width: 36px;
+    height: 36px;
+  }
+
   .player {
     padding: var(--space-3) var(--space-4);
+    height: 84px;
   }
 
   .container {

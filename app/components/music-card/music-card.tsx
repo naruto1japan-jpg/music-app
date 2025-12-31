@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { Play, ListPlus, MoreVertical } from "lucide-react";
 import type { Track } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
@@ -21,7 +22,9 @@ export function MusicCard({ track, className, variant = 'default' }: MusicCardPr
   const { playTrack, addToQueue } = useMusic();
   const [coverUrl, setCoverUrl] = React.useState<string>('');
   const [showMenu, setShowMenu] = React.useState(false);
+  const [menuPosition, setMenuPosition] = React.useState({ top: 0, left: 0 });
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
 
   React.useEffect(() => {
     if (track.coverUrl) {
@@ -50,6 +53,13 @@ export function MusicCard({ track, className, variant = 'default' }: MusicCardPr
 
   const toggleMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!showMenu && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 4,
+        left: rect.right - 180 // Align to right edge of button
+      });
+    }
     setShowMenu(prev => !prev);
   };
 
@@ -118,6 +128,7 @@ export function MusicCard({ track, className, variant = 'default' }: MusicCardPr
             </button>
             <div className={styles.menuContainer} ref={menuRef}>
               <button 
+                ref={buttonRef}
                 className={styles.menuButton}
                 onClick={toggleMenu}
                 aria-label="More options"
@@ -126,8 +137,14 @@ export function MusicCard({ track, className, variant = 'default' }: MusicCardPr
               >
                 <MoreVertical size={18} />
               </button>
-              {showMenu && (
-                <div className={styles.dropdown}>
+              {showMenu && typeof document !== 'undefined' && createPortal(
+                <div 
+                  className={styles.dropdown}
+                  style={{
+                    top: `${menuPosition.top}px`,
+                    left: `${menuPosition.left}px`
+                  }}
+                >
                   <button 
                     className={styles.dropdownItem}
                     onClick={(e) => handleMenuAction(e, () => playTrack(track))}
@@ -142,7 +159,8 @@ export function MusicCard({ track, className, variant = 'default' }: MusicCardPr
                     <ListPlus size={16} />
                     Add to Queue
                   </button>
-                </div>
+                </div>,
+                document.getElementById('dropdown-portal')!
               )}
             </div>
           </div>

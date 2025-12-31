@@ -102,6 +102,38 @@ export function MiniPlayer() {
 
   return (
     <>
+      {/* Queue Bar */}
+      {queue.length > 0 && !isExpanded && (
+        <div className={styles.queueBar}>
+          <div className={styles.queueBarContent}>
+            <div className={styles.queueBarHeader}>
+              <ListMusic size={16} />
+              <span className={styles.queueBarTitle}>Next in Queue ({queue.length})</span>
+            </div>
+            <div className={styles.queueBarList}>
+              {queue.slice(0, 3).map((track, index) => (
+                <div key={`${track.id}-${index}`} className={styles.queueBarItem}>
+                  <img 
+                    src={track.coverUrl} 
+                    alt={track.title} 
+                    className={styles.queueBarCover}
+                  />
+                  <div className={styles.queueBarInfo}>
+                    <span className={styles.queueBarTrackTitle}>{track.title}</span>
+                    <span className={styles.queueBarTrackArtist}>{track.artist}</span>
+                  </div>
+                </div>
+              ))}
+              {queue.length > 3 && (
+                <div className={styles.queueBarMore}>
+                  +{queue.length - 3} more
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mini Player Bar */}
       <div 
         className={styles.player} 
