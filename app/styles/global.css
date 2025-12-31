@@ -20,6 +20,16 @@ body {
   
   /* Prevent overscroll */
   overscroll-behavior: none;
+  
+  /* Stable frame on all devices */
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height */
+  max-height: -webkit-fill-available; /* Safari fix */
+  position: fixed;
+  overflow: hidden;
 }
 
 /* Ultra-smooth animations based on device capability */
