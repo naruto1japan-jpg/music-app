@@ -52,6 +52,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="theme-color" content="#8b5cf6" />
+        <meta name="description" content="YouTube Music Player with background playback and offline support" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
         <Meta />
         <script src={colorSchemeApi}></script>
         <Links />
@@ -70,17 +72,72 @@ export default function App() {
   // Initialize performance optimizer for device-specific optimizations
   const { deviceInfo, settings } = usePerformanceOptimizer();
 
-  // Register service worker for background audio support
+  // Register service worker for always-online experience
   React.useEffect(() => {
     if ('serviceWorker' in navigator) {
+      // Register the service worker
       navigator.serviceWorker
         .register('/service-worker.js')
         .then((registration) => {
-          console.log('Service Worker registered:', registration);
+          console.log('[App] Service Worker registered successfully');
+          
+          // Check for updates every 30 seconds when app is active
+          const updateInterval = setInterval(() => {
+            registration.update();
+          }, 30000);
+
+          // Check for updates immediately
+          registration.update();
+
+          // Listen for new service worker waiting to activate
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('[App] New service worker available');
+                  // Automatically activate the new service worker
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            }
+          });
+
+          // Cleanup on unmount
+          return () => clearInterval(updateInterval);
         })
         .catch((error) => {
-          console.warn('Service Worker registration failed:', error);
+          console.warn('[App] Service Worker registration failed:', error);
         });
+
+      // Handle service worker controller change (new version activated)
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          console.log('[App] New service worker activated, reloading...');
+          window.location.reload();
+        }
+      });
+
+      // Listen for messages from service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'ONLINE') {
+          console.log('[App] Connection restored');
+        }
+        if (event.data && event.data.type === 'OFFLINE') {
+          console.log('[App] Connection lost - running in offline mode');
+        }
+      });
+
+      // Monitor online/offline status
+      window.addEventListener('online', () => {
+        console.log('[App] Network online');
+      });
+
+      window.addEventListener('offline', () => {
+        console.log('[App] Network offline - app will continue to work');
+      });
     }
   }, []);
 

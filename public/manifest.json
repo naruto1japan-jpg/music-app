@@ -1,8 +1,9 @@
 {
   "name": "Music Player",
   "short_name": "Music",
-  "description": "YouTube Music Player with background playback",
+  "description": "YouTube Music Player with background playback and offline support",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#8b5cf6",
@@ -16,5 +17,14 @@
     }
   ],
   "categories": ["music", "entertainment"],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }
