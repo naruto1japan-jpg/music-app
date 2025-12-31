@@ -122,6 +122,7 @@ export function MusicCard({ track, className, variant = 'default' }: MusicCardPr
                 onClick={toggleMenu}
                 aria-label="More options"
                 title="More options"
+                data-active={showMenu}
               >
                 <MoreVertical size={18} />
               </button>
@@ -131,12 +132,14 @@ export function MusicCard({ track, className, variant = 'default' }: MusicCardPr
                     className={styles.dropdownItem}
                     onClick={(e) => handleMenuAction(e, () => playTrack(track))}
                   >
+                    <Play size={16} />
                     Play Now
                   </button>
                   <button 
                     className={styles.dropdownItem}
                     onClick={(e) => handleMenuAction(e, () => addToQueue(track))}
                   >
+                    <ListPlus size={16} />
                     Add to Queue
                   </button>
                 </div>

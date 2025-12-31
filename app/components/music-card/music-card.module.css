@@ -176,11 +176,20 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s var(--ease-out);
+  position: relative;
+  z-index: 1;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .menuButton:hover {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
+}
+
+.menuButton:active,
+.menuButton[data-active="true"] {
+  background: rgba(30, 215, 96, 0.2);
+  color: #1db954;
 }
 
 .dropdown {
@@ -189,12 +198,14 @@
   top: calc(100% + var(--space-2));
   background: #282828;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-2);
+  border-radius: var(--radius-3);
   padding: var(--space-2);
-  min-width: 160px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  z-index: 10;
-  animation: fadeIn 0.15s var(--ease-out);
+  min-width: 180px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  animation: fadeIn 0.2s var(--ease-out);
+  backdrop-filter: blur(10px);
+  background: rgba(40, 40, 40, 0.98);
 }
 
 @keyframes fadeIn {
@@ -210,21 +221,59 @@
 
 .dropdownItem {
   width: 100%;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-3);
   background: transparent;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: var(--radius-2);
   text-align: left;
   cursor: pointer;
   transition: all 0.15s var(--ease-out);
   font: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .dropdownItem:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+}
+
+.dropdownItem:active {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(0.98);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .dropdown {
+    min-width: 200px;
+    padding: var(--space-3);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8), 0 4px 16px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  
+  .dropdownItem {
+    padding: var(--space-4) var(--space-4);
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  
+  .menuButton,
+  .queueButton {
+    width: 36px;
+    height: 36px;
+    opacity: 1 !important; /* Always show on mobile */
+  }
+  
+  .actions {
+    opacity: 1; /* Always show actions on mobile */
+  }
 }
 
 /* Compact Card Variant */
