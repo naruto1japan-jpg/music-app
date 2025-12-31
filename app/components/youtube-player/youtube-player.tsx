@@ -100,12 +100,17 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
 
       // Clear the container before creating new player to prevent child node errors
       if (containerRef.current) {
-        while (containerRef.current.firstChild) {
-          containerRef.current.removeChild(containerRef.current.firstChild);
+        try {
+          while (containerRef.current.firstChild) {
+            containerRef.current.removeChild(containerRef.current.firstChild);
+          }
+        } catch (e) {
+          console.warn('Error clearing container (safe to ignore):', e);
         }
       }
 
-      playerRef.current = new (window as any).YT.Player(containerRef.current, {
+      try {
+        playerRef.current = new (window as any).YT.Player(containerRef.current, {
           videoId,
           playerVars: {
             autoplay: 1,
@@ -160,6 +165,11 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
             },
           },
         });
+      } catch (e) {
+        console.error('Error creating YouTube player:', e);
+        // Reload on critical initialization error
+        window.location.reload();
+      }
     };
 
     initPlayer();
@@ -312,30 +322,30 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
     }
   };
 
-  // Function to play a new song with proper audio unlock handling
+  // Function to play a new song with proper audio unlock handling and error recovery
   const playNewSong = (newVideoId: string) => {
-    // Check if player exists and has the method before calling
-    if (playerRef.current && typeof playerRef.current.loadVideoById === 'function') {
-      try {
+    try {
+      // Reset the UI button first
+      setShowUnlockPrompt(true);
+
+      // Check if player is ready
+      if (playerRef.current && typeof playerRef.current.loadVideoById === 'function') {
         playerRef.current.loadVideoById({
           videoId: newVideoId,
           startSeconds: 0,
           suggestedQuality: 'small'
         });
-        playerRef.current.mute();
-        
-        // Bring back the "Unlock Audio" overlay
-        setShowUnlockPrompt(true);
-      } catch (e) {
-        console.log('Caught error during video load (safe to ignore):', e);
-        // Fallback: reload if player is in bad state
-        if (e instanceof Error && e.message.includes('removeChild')) {
-          window.location.reload();
-        }
+        playerRef.current.mute(); // Start muted to bypass restriction
+        playerRef.current.playVideo();
+      } else {
+        // If the player somehow died, just reload
+        // rather than showing the "Oops" error
+        console.error('Player not initialized yet.');
+        window.location.reload();
       }
-    } else {
-      // Fallback: If player crashed, reload the page
-      console.warn('Player not ready, reloading...');
+    } catch (err) {
+      console.warn('Caught a removeChild style error. Resetting player...');
+      // If it crashes, a simple page reload is better than the error screen
       window.location.reload();
     }
   };
@@ -348,15 +358,15 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
   }, []);
 
   return (
-    <>
+    <div className={styles.playerWrapper}>
       {showUnlockPrompt && (
         <div className={styles.audioUnlock} onClick={unlockAudio} id="audio-unlock">
           <div className={styles.unlockContent}>
-            <h3>Click to Play New Song</h3>
+            <h2>Tap to Play</h2>
           </div>
         </div>
       )}
-      <div ref={containerRef} className={styles.player} />
-    </>
+      <div ref={containerRef} className={styles.player} id="player" />
+    </div>
   );
 }
