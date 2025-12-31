@@ -1,7 +1,7 @@
 import React from "react";
 import type { Route } from "./+types/admin";
-import { Settings, Plus, Edit, Trash2, Upload } from "lucide-react";
-import { Header } from "~/components/header/header";
+import { Link } from "react-router";
+import { Settings, Plus, Edit, Trash2, Upload, Home, Search } from "lucide-react";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { GENRES, type Track } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
@@ -203,7 +203,23 @@ export default function Admin() {
 
   return (
     <div className={styles.page}>
-      <Header />
+      <aside className={styles.sidebar}>
+        <div className={styles.logo}>
+          <span className={styles.logoText}>Harmony Flow</span>
+        </div>
+        <Link to="/" className={styles.sidebarLink}>
+          <Home size={24} />
+          <span>Home</span>
+        </Link>
+        <Link to="/search" className={styles.sidebarLink}>
+          <Search size={24} />
+          <span>Search</span>
+        </Link>
+        <Link to="/admin" className={styles.sidebarLink} data-active>
+          <Settings size={24} />
+          <span>Admin</span>
+        </Link>
+      </aside>
       <div className={styles.container}>
         <div className={styles.header}>
           <h2 className={styles.title}>

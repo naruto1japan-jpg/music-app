@@ -1,7 +1,7 @@
 import React from "react";
 import type { Route } from "./+types/search";
-import { Search as SearchIcon, Music2, Youtube } from "lucide-react";
-import { Header } from "~/components/header/header";
+import { Link } from "react-router";
+import { Search as SearchIcon, Music2, Youtube, Home, Settings } from "lucide-react";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
 import { GENRES, type Genre, type Track } from "~/data/music";
@@ -203,7 +203,23 @@ export default function Search() {
 
   return (
     <div className={styles.page}>
-      <Header />
+      <aside className={styles.sidebar}>
+        <div className={styles.logo}>
+          <span className={styles.logoText}>Harmony Flow</span>
+        </div>
+        <Link to="/" className={styles.sidebarLink}>
+          <Home size={24} />
+          <span>Home</span>
+        </Link>
+        <Link to="/search" className={styles.sidebarLink} data-active>
+          <SearchIcon size={24} />
+          <span>Search</span>
+        </Link>
+        <Link to="/admin" className={styles.sidebarLink}>
+          <Settings size={24} />
+          <span>Admin</span>
+        </Link>
+      </aside>
       <div className={styles.container}>
         <div className={styles.header}>
           <h2 className={styles.title}>Search Music</h2>

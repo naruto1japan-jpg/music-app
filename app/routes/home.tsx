@@ -3,7 +3,6 @@ import type { Route } from "./+types/home";
 import { Link } from "react-router";
 import { Home as HomeIcon, Search, Settings } from "lucide-react";
 
-import { Header } from "~/components/header/header";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
 import { useMusic } from "~/contexts/music-context";
@@ -29,6 +28,9 @@ export default function Home() {
   return (
     <div className={styles.layout}>
       <aside className={styles.sidebar}>
+        <div className={styles.logo}>
+          <span className={styles.logoText}>Harmony Flow</span>
+        </div>
         <Link to="/" className={styles.sidebarLink}>
           <HomeIcon size={24} />
           <span>Home</span>
@@ -42,7 +44,6 @@ export default function Home() {
           <span>Admin</span>
         </Link>
       </aside>
-      <Header />
       <main className={styles.mainContent}>
         <div className={styles.contentWrapper}>
           <div className={styles.section}>
