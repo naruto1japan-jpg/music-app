@@ -546,33 +546,41 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   }, [autoQueue, tracks, queue, currentTrack, lastPlayed]);
 
   const nextTrack = React.useCallback(() => {
-    // If there's a queue, play from queue first
+    console.log('nextTrack called - queue length:', queue.length);
+    
+    // PRIORITY 1: Play from queue if songs are queued
     if (queue.length > 0) {
       const nextTrack = queue[0];
-      setQueue(prev => prev.slice(1));
+      console.log('Playing next song from queue:', nextTrack.title);
+      setQueue(prev => prev.slice(1)); // Remove the first song from queue
       playTrack(nextTrack);
       
       // SPOTIFY MAGIC: If queue is running low (1 song left), auto-generate more!
       if (queue.length <= 1 && autoQueue) {
-        autoFillQueue();
+        console.log('Queue running low, auto-filling...');
+        setTimeout(() => autoFillQueue(), 500);
       }
       return;
     }
     
-    if (!currentTrack || tracks.length === 0) return;
+    if (!currentTrack || tracks.length === 0) {
+      console.log('No current track or no tracks available');
+      return;
+    }
     
-    // Auto-queue enabled: smart recommendation and auto-fill
+    // PRIORITY 2: Auto-queue enabled - smart recommendation
     if (autoQueue) {
       const recommendation = getSmartRecommendation();
       if (recommendation) {
+        console.log('Playing smart recommendation:', recommendation.title);
         playTrack(recommendation);
         // Auto-fill queue after playing recommendation
-        setTimeout(() => autoFillQueue(), 100);
+        setTimeout(() => autoFillQueue(), 500);
         return;
       }
     }
     
-    // Manual mode or fallback: sequential/shuffle
+    // PRIORITY 3: Manual mode or fallback - sequential/shuffle
     const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
     let nextIndex;
     
@@ -582,6 +590,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       nextIndex = (currentIndex + 1) % tracks.length;
     }
     
+    console.log('Playing track at index:', nextIndex);
     playTrack(tracks[nextIndex]);
   }, [currentTrack, tracks, isShuffle, playTrack, queue, autoQueue, getSmartRecommendation, autoFillQueue]);
 
@@ -609,12 +618,25 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addToQueue = React.useCallback((track: Track) => {
+    // Check if track is already in queue
+    const isAlreadyInQueue = queue.some(t => t.id === track.id);
+    
+    if (isAlreadyInQueue) {
+      toast({
+        title: "Already in Queue",
+        description: `${track.title} is already queued`,
+      });
+      console.log('Track already in queue:', track.title);
+      return;
+    }
+    
     setQueue(prev => [...prev, track]);
+    console.log('Added to queue:', track.title, 'New queue length:', queue.length + 1);
     toast({
       title: "Added to Queue",
       description: `${track.title} by ${track.artist}`,
     });
-  }, []);
+  }, [queue]);
 
   const removeFromQueue = React.useCallback((index: number) => {
     setQueue(prev => prev.filter((_, i) => i !== index));
@@ -672,10 +694,13 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     if (!audio || youtubeVideoId) return;
 
     const handleEnded = () => {
+      console.log('Audio track ended');
       if (isRepeat) {
+        console.log('Repeating current track');
         audio.currentTime = 0;
         audio.play().catch(err => console.error('Playback error:', err));
       } else {
+        console.log('Moving to next track');
         nextTrack();
       }
     };
@@ -702,12 +727,16 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const handleYouTubeStateChange = React.useCallback((state: number) => {
     // 0 = ended, 1 = playing, 2 = paused
+    console.log('YouTube state changed:', state);
     if (state === 0) {
       // Track ended
+      console.log('YouTube track ended');
       if (isRepeat) {
+        console.log('Repeating current track');
         setCurrentTime(0);
         setIsPlaying(true);
       } else {
+        console.log('Moving to next track from queue or playlist');
         nextTrack();
       }
     }
