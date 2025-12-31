@@ -8,6 +8,7 @@ import classNames from "classnames";
 interface MusicCardProps {
   track: Track;
   className?: string;
+  variant?: 'default' | 'compact';
 }
 
 function formatDuration(seconds: number): string {
@@ -16,7 +17,7 @@ function formatDuration(seconds: number): string {
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
-export function MusicCard({ track, className }: MusicCardProps) {
+export function MusicCard({ track, className, variant = 'default' }: MusicCardProps) {
   const { playTrack, addToQueue } = useMusic();
   const [coverUrl, setCoverUrl] = React.useState<string>('');
 
@@ -44,6 +45,20 @@ export function MusicCard({ track, className }: MusicCardProps) {
     e.stopPropagation();
     addToQueue(track);
   };
+
+  if (variant === 'compact') {
+    return (
+      <div className={classNames(styles.compactCard, className)} onClick={handlePlay}>
+        <img src={coverUrl} alt={`${track.title} cover`} className={styles.compactCover} />
+        <div className={styles.compactInfo}>
+          <h3 className={styles.compactTitle}>{track.title}</h3>
+        </div>
+        <button className={styles.compactPlayButton} aria-label="Play track">
+          <Play className={styles.playIcon} size={20} fill="currentColor" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={classNames(styles.card, className)}>

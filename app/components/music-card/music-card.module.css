@@ -107,3 +107,74 @@
 .footer {
   display: none;
 }
+
+/* Compact Card Variant */
+.compactCard {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+
+.compactCard:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.compactCover {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-2);
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.compactInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.compactTitle {
+  font: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compactPlayButton {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-round);
+  background: #1db954;
+  color: #000;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  flex-shrink: 0;
+  opacity: 0;
+  transform: scale(0.9);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.compactCard:hover .compactPlayButton {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.compactPlayButton:hover {
+  background: #1ed760;
+  transform: scale(1.05);
+}

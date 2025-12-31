@@ -1,11 +1,12 @@
 import React from "react";
 import type { Route } from "./+types/home";
 import { Link } from "react-router";
-import { Home as HomeIcon, Search, Settings, Menu, X } from "lucide-react";
+import { Home as HomeIcon, Search, Settings, Menu, X, User } from "lucide-react";
 
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
 import { useMusic } from "~/contexts/music-context";
+import { mockTracks } from "~/data/music";
 import styles from "./home.module.css";
 
 export function meta({}: Route.MetaArgs) {
@@ -18,13 +19,21 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+const categories = ["All", "Wrapped", "Music", "Podcasts"];
+
 export default function Home() {
-  const { backgroundGradient, lastPlayed } = useMusic();
+  const { backgroundGradient, lastPlayed, playTrack } = useMusic();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [selectedCategory, setSelectedCategory] = React.useState("All");
 
   React.useEffect(() => {
     document.documentElement.style.setProperty('--dynamic-background', backgroundGradient);
   }, [backgroundGradient]);
+
+  // Get recent plays and featured tracks
+  const recentPlays = lastPlayed.length > 0 ? lastPlayed.slice(0, 2) : mockTracks.slice(0, 2);
+  const featuredTracks = mockTracks.filter(track => track.featured);
+  const jumpBackIn = mockTracks.slice(0, 3);
 
   return (
     <div className={styles.layout}>
@@ -53,19 +62,75 @@ export default function Home() {
         </Link>
       </aside>
       <main className={styles.mainContent}>
+        <div className={styles.topBar}>
+          <div className={styles.userAvatar}>
+            <User size={20} />
+          </div>
+          <div className={styles.categories}>
+            {categories.map((category) => (
+              <button
+                key={category}
+                className={`${styles.categoryButton} ${selectedCategory === category ? styles.categoryActive : ''}`}
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className={styles.contentWrapper}>
+          {/* Recent Plays */}
+          <div className={styles.recentSection}>
+            {recentPlays.map((track) => (
+              <MusicCard
+                key={track.id}
+                track={track}
+                variant="compact"
+              />
+            ))}
+          </div>
+
+          {/* Pre-save upcoming releases */}
           <div className={styles.section}>
-            <h2 className={styles.greeting}>Good evening</h2>
-            {lastPlayed.length > 0 && (
-              <div className={styles.grid}>
-                {lastPlayed.slice(0, 6).map((track) => (
-                  <MusicCard
-                    key={track.id}
-                    track={track}
+            <h2 className={styles.sectionTitle}>Pre-save upcoming releases</h2>
+            <div className={styles.horizontalScroll}>
+              {featuredTracks.map((track) => (
+                <div key={track.id} className={styles.largeCard} onClick={() => playTrack(track)}>
+                  <img 
+                    src={track.coverUrl || 'https://placehold.co/400x400/1a1a1a/666'} 
+                    alt={track.title}
+                    className={styles.largeCardImage}
                   />
-                ))}
-              </div>
-            )}
+                  <div className={styles.largeCardInfo}>
+                    <h3 className={styles.largeCardTitle}>{track.title}</h3>
+                    <p className={styles.largeCardArtist}>{track.artist}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Jump back in */}
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Jump back in</h2>
+            <div className={styles.horizontalScroll}>
+              {jumpBackIn.map((track) => (
+                <div key={track.id} className={styles.mixCard} onClick={() => playTrack(track)}>
+                  <img 
+                    src={track.coverUrl || 'https://placehold.co/400x400/1a1a1a/666'} 
+                    alt={track.title}
+                    className={styles.mixCardImage}
+                  />
+                  <div className={styles.mixCardOverlay}>
+                    <span className={styles.mixCardLabel}>{track.genre} Mix</span>
+                  </div>
+                  <div className={styles.mixCardInfo}>
+                    <p className={styles.mixCardArtist}>{track.artist}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </main>
