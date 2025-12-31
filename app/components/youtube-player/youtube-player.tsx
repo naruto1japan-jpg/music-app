@@ -310,13 +310,35 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
     }
   };
 
+  // Function to play a new song with proper audio unlock handling
+  const playNewSong = (newVideoId: string) => {
+    // 1. Load the new video (starts muted to satisfy the browser)
+    if (playerRef.current) {
+      playerRef.current.loadVideoById({
+        videoId: newVideoId,
+        startSeconds: 0,
+        suggestedQuality: 'small'
+      });
+      playerRef.current.mute();
+    }
+
+    // 2. Bring back the "Unlock Audio" overlay
+    setShowUnlockPrompt(true);
+  };
+
+  // Expose playNewSong function to parent via onPlayerReady
+  React.useEffect(() => {
+    if (playerRef.current) {
+      (playerRef.current as any).playNewSong = playNewSong;
+    }
+  }, []);
+
   return (
     <>
       {showUnlockPrompt && (
-        <div className={styles.audioUnlock} onClick={unlockAudio}>
+        <div className={styles.audioUnlock} onClick={unlockAudio} id="audio-unlock">
           <div className={styles.unlockContent}>
-            <h3>🔊 Click to Enable Audio</h3>
-            <p>Tap here to unmute and start playback</p>
+            <h3>Click to Play New Song</h3>
           </div>
         </div>
       )}
