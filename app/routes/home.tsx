@@ -1,5 +1,7 @@
 import React from "react";
 import type { Route } from "./+types/home";
+import { Link } from "react-router";
+import { Home as HomeIcon, Search, Settings } from "lucide-react";
 import { Header } from "~/components/header/header";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
@@ -25,6 +27,20 @@ export default function Home() {
 
   return (
     <div className={styles.layout}>
+      <aside className={styles.sidebar}>
+        <Link to="/" className={styles.sidebarLink}>
+          <HomeIcon size={24} />
+          <span>Home</span>
+        </Link>
+        <Link to="/search" className={styles.sidebarLink}>
+          <Search size={24} />
+          <span>Search</span>
+        </Link>
+        <Link to="/admin" className={styles.sidebarLink}>
+          <Settings size={24} />
+          <span>Admin</span>
+        </Link>
+      </aside>
       <Header />
       <main className={styles.mainContent}>
         <div className={styles.contentWrapper}>
