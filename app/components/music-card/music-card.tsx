@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, ListPlus } from "lucide-react";
+import { Play, ListPlus, MoreVertical } from "lucide-react";
 import type { Track } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
 import styles from "./music-card.module.css";
@@ -20,6 +20,8 @@ function formatDuration(seconds: number): string {
 export function MusicCard({ track, className, variant = 'default' }: MusicCardProps) {
   const { playTrack, addToQueue } = useMusic();
   const [coverUrl, setCoverUrl] = React.useState<string>('');
+  const [showMenu, setShowMenu] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (track.coverUrl) {
@@ -45,6 +47,31 @@ export function MusicCard({ track, className, variant = 'default' }: MusicCardPr
     e.stopPropagation();
     addToQueue(track);
   };
+
+  const toggleMenu = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(prev => !prev);
+  };
+
+  const handleMenuAction = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+    setShowMenu(false);
+  };
+
+  // Close menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMenu]);
 
   if (variant === 'compact') {
     return (
@@ -80,14 +107,42 @@ export function MusicCard({ track, className, variant = 'default' }: MusicCardPr
             <span className={styles.genre}>{track.genre}</span>
             <span className={styles.duration}>{formatDuration(track.duration)}</span>
           </div>
-          <button 
-            className={styles.queueButton}
-            onClick={handleAddToQueue}
-            aria-label="Add to queue"
-            title="Add to queue"
-          >
-            <ListPlus size={18} />
-          </button>
+          <div className={styles.actions}>
+            <button 
+              className={styles.queueButton}
+              onClick={handleAddToQueue}
+              aria-label="Add to queue"
+              title="Add to queue"
+            >
+              <ListPlus size={18} />
+            </button>
+            <div className={styles.menuContainer} ref={menuRef}>
+              <button 
+                className={styles.menuButton}
+                onClick={toggleMenu}
+                aria-label="More options"
+                title="More options"
+              >
+                <MoreVertical size={18} />
+              </button>
+              {showMenu && (
+                <div className={styles.dropdown}>
+                  <button 
+                    className={styles.dropdownItem}
+                    onClick={(e) => handleMenuAction(e, () => playTrack(track))}
+                  >
+                    Play Now
+                  </button>
+                  <button 
+                    className={styles.dropdownItem}
+                    onClick={(e) => handleMenuAction(e, () => addToQueue(track))}
+                  >
+                    Add to Queue
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

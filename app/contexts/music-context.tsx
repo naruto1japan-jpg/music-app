@@ -3,6 +3,7 @@ import type { Track } from "~/data/music";
 import { mockTracks } from "~/data/music";
 import { extractColorsFromImage, createGradientCSS, type DominantColors } from "~/utils/color-extractor";
 import { YouTubePlayer } from "~/components/youtube-player/youtube-player";
+import { toast } from "~/hooks/use-toast";
 
 interface MusicContextType {
   currentTrack: Track | null;
@@ -494,22 +495,79 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     return availableTracks[Math.floor(Math.random() * availableTracks.length)];
   }, [tracks, lastPlayed, currentTrack]);
 
+  // Auto-fill queue with smart recommendations
+  const autoFillQueue = React.useCallback(() => {
+    if (!autoQueue || tracks.length === 0) return;
+    
+    // Get sorted genres by preference
+    const sortedGenres = Array.from(genrePreferenceRef.current.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([genre]) => genre);
+    
+    // Filter out already queued tracks and current track
+    const queuedIds = new Set([...queue.map(t => t.id), currentTrack?.id]);
+    const playedIds = new Set(lastPlayed.map(t => t.id));
+    
+    // Prefer unplayed tracks from favorite genres
+    const availableTracks = tracks.filter(t => !queuedIds.has(t.id));
+    const suggestions: Track[] = [];
+    
+    // Try to add 2 tracks from preferred genres
+    for (const genre of sortedGenres) {
+      const genreTracks = availableTracks.filter(t => 
+        t.genre === genre && !playedIds.has(t.id) && !suggestions.some(s => s.id === t.id)
+      );
+      
+      if (genreTracks.length > 0) {
+        suggestions.push(genreTracks[Math.floor(Math.random() * genreTracks.length)]);
+        if (suggestions.length >= 2) break;
+      }
+    }
+    
+    // If we don't have enough suggestions, add random tracks
+    if (suggestions.length < 2) {
+      const remainingTracks = availableTracks.filter(t => !suggestions.some(s => s.id === t.id));
+      while (suggestions.length < 2 && remainingTracks.length > 0) {
+        const randomIndex = Math.floor(Math.random() * remainingTracks.length);
+        suggestions.push(remainingTracks[randomIndex]);
+        remainingTracks.splice(randomIndex, 1);
+      }
+    }
+    
+    if (suggestions.length > 0) {
+      setQueue(prev => [...prev, ...suggestions]);
+      const genreText = sortedGenres[0] ? ` based on your love for ${sortedGenres[0]}` : '';
+      toast({
+        title: "Smart Queue Active",
+        description: `Added ${suggestions.length} song${suggestions.length > 1 ? 's' : ''} to queue${genreText}`,
+      });
+      console.log(`Smart Queue: Added ${suggestions.length} suggestions based on your preferences`);
+    }
+  }, [autoQueue, tracks, queue, currentTrack, lastPlayed]);
+
   const nextTrack = React.useCallback(() => {
     // If there's a queue, play from queue first
     if (queue.length > 0) {
       const nextTrack = queue[0];
       setQueue(prev => prev.slice(1));
       playTrack(nextTrack);
+      
+      // SPOTIFY MAGIC: If queue is running low (1 song left), auto-generate more!
+      if (queue.length <= 1 && autoQueue) {
+        autoFillQueue();
+      }
       return;
     }
     
     if (!currentTrack || tracks.length === 0) return;
     
-    // Auto-queue enabled: smart recommendation
+    // Auto-queue enabled: smart recommendation and auto-fill
     if (autoQueue) {
       const recommendation = getSmartRecommendation();
       if (recommendation) {
         playTrack(recommendation);
+        // Auto-fill queue after playing recommendation
+        setTimeout(() => autoFillQueue(), 100);
         return;
       }
     }
@@ -525,7 +583,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
     
     playTrack(tracks[nextIndex]);
-  }, [currentTrack, tracks, isShuffle, playTrack, queue, autoQueue, getSmartRecommendation]);
+  }, [currentTrack, tracks, isShuffle, playTrack, queue, autoQueue, getSmartRecommendation, autoFillQueue]);
 
   const previousTrack = React.useCallback(() => {
     if (!currentTrack || tracks.length === 0) return;
@@ -552,6 +610,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const addToQueue = React.useCallback((track: Track) => {
     setQueue(prev => [...prev, track]);
+    toast({
+      title: "Added to Queue",
+      description: `${track.title} by ${track.artist}`,
+    });
   }, []);
 
   const removeFromQueue = React.useCallback((index: number) => {
