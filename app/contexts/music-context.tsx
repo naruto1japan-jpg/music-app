@@ -693,6 +693,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       {children}
       {youtubeVideoId && (
         <YouTubePlayer
+          key={youtubeVideoId}
           videoId={youtubeVideoId}
           isPlaying={isPlaying}
           onTimeUpdate={handleYouTubeTimeUpdate}

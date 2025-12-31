@@ -94,13 +94,15 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
         try {
           playerRef.current.destroy();
         } catch (e) {
-          console.warn('Error destroying player:', e);
+          console.warn('Error destroying player (safe to ignore):', e);
         }
       }
 
-      // Clear the container before creating new player
+      // Clear the container before creating new player to prevent child node errors
       if (containerRef.current) {
-        containerRef.current.innerHTML = '';
+        while (containerRef.current.firstChild) {
+          containerRef.current.removeChild(containerRef.current.firstChild);
+        }
       }
 
       playerRef.current = new (window as any).YT.Player(containerRef.current, {
@@ -312,18 +314,30 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
 
   // Function to play a new song with proper audio unlock handling
   const playNewSong = (newVideoId: string) => {
-    // 1. Load the new video (starts muted to satisfy the browser)
-    if (playerRef.current) {
-      playerRef.current.loadVideoById({
-        videoId: newVideoId,
-        startSeconds: 0,
-        suggestedQuality: 'small'
-      });
-      playerRef.current.mute();
+    // Check if player exists and has the method before calling
+    if (playerRef.current && typeof playerRef.current.loadVideoById === 'function') {
+      try {
+        playerRef.current.loadVideoById({
+          videoId: newVideoId,
+          startSeconds: 0,
+          suggestedQuality: 'small'
+        });
+        playerRef.current.mute();
+        
+        // Bring back the "Unlock Audio" overlay
+        setShowUnlockPrompt(true);
+      } catch (e) {
+        console.log('Caught error during video load (safe to ignore):', e);
+        // Fallback: reload if player is in bad state
+        if (e instanceof Error && e.message.includes('removeChild')) {
+          window.location.reload();
+        }
+      }
+    } else {
+      // Fallback: If player crashed, reload the page
+      console.warn('Player not ready, reloading...');
+      window.location.reload();
     }
-
-    // 2. Bring back the "Unlock Audio" overlay
-    setShowUnlockPrompt(true);
   };
 
   // Expose playNewSong function to parent via onPlayerReady
