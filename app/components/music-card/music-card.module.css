@@ -2,12 +2,17 @@
   background: #181818;
   border-radius: 12px;
   overflow: hidden;
-  transition: all 0.3s var(--ease-out);
+  transition: all var(--animation-duration) var(--transition-easing);
   display: flex;
   flex-direction: column;
   height: 100%;
   padding: var(--space-3);
   cursor: pointer;
+  
+  /* GPU acceleration for silky smooth interactions */
+  transform: translateZ(0) scale(1);
+  will-change: transform, background;
+  backface-visibility: hidden;
 }
 
 .card:hover {
@@ -47,24 +52,26 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s var(--ease-out);
+  transition: all var(--scroll-snap-duration) var(--transition-easing);
   position: absolute;
   bottom: var(--space-4);
   right: var(--space-4);
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateZ(0) translateY(8px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
   z-index: 2;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .card:hover .playButton {
   opacity: 1;
-  transform: translateY(-8px);
+  transform: translateZ(0) translateY(-8px);
 }
 
 .playButton:hover {
   background: #1ed760;
-  transform: translateY(-8px) scale(1.05);
+  transform: translateZ(0) translateY(-8px) scale(1.05);
 }
 
 .content {
@@ -283,9 +290,14 @@
   gap: var(--space-3);
   padding: var(--space-2);
   cursor: pointer;
-  transition: all 0.2s var(--ease-out);
+  transition: all var(--scroll-snap-duration) var(--transition-easing);
   position: relative;
   overflow: hidden;
+  
+  /* Ultra-smooth transitions */
+  transform: translateZ(0);
+  will-change: background, transform;
+  backface-visibility: hidden;
 }
 
 .compactCard:hover {
