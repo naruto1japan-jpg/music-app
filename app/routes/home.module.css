@@ -90,21 +90,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  
-  /* Ultra-smooth scrolling at device Hz */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  scroll-behavior: smooth;
-  
-  /* GPU acceleration */
-  transform: translateZ(0);
-  will-change: scroll-position;
-  
-  /* Momentum scrolling for iOS */
-  -webkit-overflow-scrolling: touch;
-  
-  /* Smooth scroll snap */
-  scroll-snap-type: y proximity;
 }
 
 .topBar {
@@ -166,37 +153,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  
-  /* Ultra-smooth scrolling */
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  overscroll-behavior: contain;
-  
-  /* Hardware acceleration */
-  transform: translateZ(0);
-  will-change: scroll-position;
-  
-  /* Buttery smooth momentum */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-}
-
-.contentWrapper::-webkit-scrollbar {
-  width: 8px;
-}
-
-.contentWrapper::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.contentWrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  transition: background 0.2s ease;
-}
-
-.contentWrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
 }
 
 .recentSection {
@@ -222,30 +179,12 @@
   display: flex;
   gap: var(--space-4);
   overflow-x: auto;
-  overflow-y: hidden;
   padding-bottom: var(--space-2);
   scrollbar-width: none;
-  
-  /* Silky smooth horizontal scroll */
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
-  
-  /* GPU acceleration */
-  transform: translateZ(0);
-  will-change: scroll-position;
 }
 
 .horizontalScroll::-webkit-scrollbar {
   display: none;
-}
-
-/* Snap points for cards */
-.largeCard,
-.mixCard {
-  scroll-snap-align: start;
-  scroll-snap-stop: normal;
 }
 
 .largeCard {
