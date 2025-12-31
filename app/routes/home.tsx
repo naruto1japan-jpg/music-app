@@ -2,6 +2,7 @@ import React from "react";
 import type { Route } from "./+types/home";
 import { Link } from "react-router";
 import { Home as HomeIcon, Search, Settings } from "lucide-react";
+
 import { Header } from "~/components/header/header";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
