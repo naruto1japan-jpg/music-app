@@ -1,7 +1,7 @@
 import React from "react";
 import type { Route } from "./+types/search";
 import { Link } from "react-router";
-import { Search as SearchIcon, Music2, Youtube, Home, Settings } from "lucide-react";
+import { Search as SearchIcon, Music2, Youtube, Home, Settings, Menu, X } from "lucide-react";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
 import { GENRES, type Genre, type Track } from "~/data/music";
@@ -23,6 +23,7 @@ export default function Search() {
   const { tracks: userTracks, backgroundGradient } = useMusic();
   const [activeTab, setActiveTab] = React.useState<"local" | "online">("local");
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [selectedGenre, setSelectedGenre] = React.useState<Genre>("All");
   const [localResults, setLocalResults] = React.useState(userTracks);
   const [onlineResults, setOnlineResults] = React.useState<Track[]>([]);
@@ -203,19 +204,26 @@ export default function Search() {
 
   return (
     <div className={styles.page}>
-      <aside className={styles.sidebar}>
+      <button 
+        className={styles.menuButton} 
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle menu"
+      >
+        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.logo}>
           <span className={styles.logoText}>Harmony Flow</span>
         </div>
-        <Link to="/" className={styles.sidebarLink}>
+        <Link to="/" className={styles.sidebarLink} onClick={() => setSidebarOpen(false)}>
           <Home size={24} />
           <span>Home</span>
         </Link>
-        <Link to="/search" className={styles.sidebarLink} data-active>
+        <Link to="/search" className={styles.sidebarLink} data-active onClick={() => setSidebarOpen(false)}>
           <SearchIcon size={24} />
           <span>Search</span>
         </Link>
-        <Link to="/admin" className={styles.sidebarLink}>
+        <Link to="/admin" className={styles.sidebarLink} onClick={() => setSidebarOpen(false)}>
           <Settings size={24} />
           <span>Admin</span>
         </Link>

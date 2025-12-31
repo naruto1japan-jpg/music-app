@@ -1,7 +1,7 @@
 import React from "react";
 import type { Route } from "./+types/admin";
 import { Link } from "react-router";
-import { Settings, Plus, Edit, Trash2, Upload, Home, Search } from "lucide-react";
+import { Settings, Plus, Edit, Trash2, Upload, Home, Search, Menu, X } from "lucide-react";
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { GENRES, type Track } from "~/data/music";
 import { useMusic } from "~/contexts/music-context";
@@ -65,6 +65,7 @@ function TrackListItem({ track, onDelete }: { track: Track; onDelete: (id: strin
 export default function Admin() {
   const { toast } = useToast();
   const { tracks, addTrack, deleteTrack } = useMusic();
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [formData, setFormData] = React.useState({
     title: "",
     artist: "",
@@ -203,19 +204,26 @@ export default function Admin() {
 
   return (
     <div className={styles.page}>
-      <aside className={styles.sidebar}>
+      <button 
+        className={styles.menuButton} 
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle menu"
+      >
+        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.logo}>
           <span className={styles.logoText}>Harmony Flow</span>
         </div>
-        <Link to="/" className={styles.sidebarLink}>
+        <Link to="/" className={styles.sidebarLink} onClick={() => setSidebarOpen(false)}>
           <Home size={24} />
           <span>Home</span>
         </Link>
-        <Link to="/search" className={styles.sidebarLink}>
+        <Link to="/search" className={styles.sidebarLink} onClick={() => setSidebarOpen(false)}>
           <Search size={24} />
           <span>Search</span>
         </Link>
-        <Link to="/admin" className={styles.sidebarLink} data-active>
+        <Link to="/admin" className={styles.sidebarLink} data-active onClick={() => setSidebarOpen(false)}>
           <Settings size={24} />
           <span>Admin</span>
         </Link>

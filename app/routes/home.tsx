@@ -1,7 +1,7 @@
 import React from "react";
 import type { Route } from "./+types/home";
 import { Link } from "react-router";
-import { Home as HomeIcon, Search, Settings } from "lucide-react";
+import { Home as HomeIcon, Search, Settings, Menu, X } from "lucide-react";
 
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
@@ -20,6 +20,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   const { backgroundGradient, lastPlayed } = useMusic();
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   React.useEffect(() => {
     document.documentElement.style.setProperty('--dynamic-background', backgroundGradient);
@@ -27,19 +28,26 @@ export default function Home() {
 
   return (
     <div className={styles.layout}>
-      <aside className={styles.sidebar}>
+      <button 
+        className={styles.menuButton} 
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle menu"
+      >
+        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.logo}>
           <span className={styles.logoText}>Harmony Flow</span>
         </div>
-        <Link to="/" className={styles.sidebarLink}>
+        <Link to="/" className={styles.sidebarLink} onClick={() => setSidebarOpen(false)}>
           <HomeIcon size={24} />
           <span>Home</span>
         </Link>
-        <Link to="/search" className={styles.sidebarLink}>
+        <Link to="/search" className={styles.sidebarLink} onClick={() => setSidebarOpen(false)}>
           <Search size={24} />
           <span>Search</span>
         </Link>
-        <Link to="/admin" className={styles.sidebarLink}>
+        <Link to="/admin" className={styles.sidebarLink} onClick={() => setSidebarOpen(false)}>
           <Settings size={24} />
           <span>Admin</span>
         </Link>

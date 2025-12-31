@@ -8,6 +8,31 @@
   grid-template-rows: 1fr auto;
   background: #000;
   overflow: hidden;
+  position: relative;
+}
+
+.menuButton {
+  position: fixed;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 1001;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-2);
+  padding: var(--space-2);
+  color: #fff;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  transition: background-color 0.2s ease;
+}
+
+.menuButton:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar {
@@ -397,12 +422,28 @@
     grid-template-columns: 1fr;
   }
 
+  .menuButton {
+    display: flex;
+  }
+
   .sidebar {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 280px;
+    height: 100vh;
+    z-index: 1000;
+    transition: left 0.3s ease;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .sidebarOpen {
+    left: 0;
   }
 
   .container {
     padding: var(--space-6) var(--space-4);
+    padding-top: calc(var(--space-6) + 60px);
   }
 
   .searchBar {
