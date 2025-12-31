@@ -35,10 +35,15 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
   const timeUpdateIntervalRef = React.useRef<number | null>(null);
   const keepAliveIntervalRef = React.useRef<number | null>(null);
   const [showUnlockPrompt, setShowUnlockPrompt] = React.useState(true);
+  const hasUserInteractedRef = React.useRef(false); // Track if user has ever interacted
 
-  // Reset the unlock prompt whenever videoId changes (new song)
+  // Only show unlock prompt for the very first song
   React.useEffect(() => {
-    setShowUnlockPrompt(true);
+    if (!hasUserInteractedRef.current) {
+      setShowUnlockPrompt(true);
+    } else {
+      setShowUnlockPrompt(false);
+    }
   }, [videoId]);
 
   const videoInfoRef = React.useRef<{ title: string; artist: string; thumbnail: string } | null>(null);
@@ -132,6 +137,14 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
               console.log('YouTube player ready for videoId:', videoId);
               onPlayerReady?.(event.target);
               setupMediaSession(event.target);
+              
+              // Auto-unmute if user has already interacted once
+              if (hasUserInteractedRef.current) {
+                event.target.unMute();
+                event.target.setVolume(100);
+                console.log('Auto-unmuted new track (user previously interacted)');
+              }
+              
               onReady?.();
             },
             onStateChange: (event: any) => {
@@ -356,7 +369,8 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
       playerRef.current.unMute();
       playerRef.current.setVolume(100);
       setShowUnlockPrompt(false);
-      console.log('Audio unlocked for current track');
+      hasUserInteractedRef.current = true; // Remember user interaction
+      console.log('Audio unlocked - will auto-unmute future tracks');
     }
   };
 
