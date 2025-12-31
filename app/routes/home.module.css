@@ -10,6 +10,36 @@
   overflow: hidden;
 }
 
+.sidebar {
+  grid-area: sidebar;
+  background: #000;
+  padding: var(--space-6) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sidebarLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-6);
+  color: #b3b3b3;
+  text-decoration: none;
+  font: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+}
+
+.sidebarLink:hover {
+  color: #fff;
+}
+
+.sidebarLink svg {
+  flex-shrink: 0;
+}
+
 .mainContent {
   grid-area: main;
   background: linear-gradient(180deg, #1a1a1a 0%, #121212 100%);
@@ -55,6 +85,10 @@
       "main"
       "player";
     grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    display: none;
   }
   
   .contentWrapper {
