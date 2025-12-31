@@ -57,6 +57,8 @@ const STORAGE_KEY = 'harmony-flow-tracks';
 const DELETED_TRACKS_KEY = 'harmony-flow-deleted-tracks';
 const LAST_PLAYED_KEY = 'harmony-flow-last-played';
 const AUTO_QUEUE_KEY = 'harmony-flow-auto-queue';
+const SAVE_KEY = 'last_video_id';
+const TIME_KEY = 'last_timestamp';
 // Pre-populate mock track IDs at module level
 const MOCK_TRACK_IDS = new Set<string>(mockTracks.map(t => t.id));
 
@@ -652,6 +654,20 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const handleYouTubePlayerReady = React.useCallback((player: any) => {
     youtubePlayerRef.current = player;
   }, []);
+
+  // Auto-save progress every 2 seconds for crash recovery
+  React.useEffect(() => {
+    const saveInterval = setInterval(() => {
+      if (isPlaying && currentTrack) {
+        if (currentTrack.youtubeVideoId) {
+          localStorage.setItem(SAVE_KEY, currentTrack.youtubeVideoId);
+          localStorage.setItem(TIME_KEY, currentTime.toString());
+        }
+      }
+    }, 2000);
+
+    return () => clearInterval(saveInterval);
+  }, [isPlaying, currentTrack, currentTime]);
 
   const value = React.useMemo(
     () => ({
