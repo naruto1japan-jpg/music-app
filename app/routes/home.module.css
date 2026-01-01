@@ -90,8 +90,6 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 .topBar {
@@ -151,9 +149,6 @@
   padding: var(--space-6);
   padding-top: var(--space-4);
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
 }
 
 .recentSection {

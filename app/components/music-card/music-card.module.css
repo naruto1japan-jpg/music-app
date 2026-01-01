@@ -2,7 +2,7 @@
   background: #181818;
   border-radius: 12px;
   overflow: hidden;
-  transition: all 0.3s var(--ease-out);
+  transition: background-color 0.2s ease;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -47,7 +47,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s var(--ease-out);
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
   position: absolute;
   bottom: var(--space-4);
   right: var(--space-4);
@@ -134,7 +134,7 @@
   gap: var(--space-2);
   align-items: center;
   opacity: 0;
-  transition: opacity 0.2s var(--ease-out);
+  transition: opacity 0.2s ease;
 }
 
 .card:hover .actions {
@@ -152,7 +152,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s var(--ease-out);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .queueButton:hover {
@@ -175,7 +175,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s var(--ease-out);
+  transition: background-color 0.2s ease, color 0.2s ease;
   position: relative;
   z-index: 1;
   -webkit-tap-highlight-color: transparent;
@@ -194,16 +194,15 @@
 
 .dropdown {
   position: fixed;
-  background: #282828;
+  background: rgba(40, 40, 40, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-3);
   padding: var(--space-2);
   min-width: 180px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.3);
   z-index: 9999;
-  animation: fadeIn 0.2s var(--ease-out);
+  animation: fadeIn 0.15s ease;
   backdrop-filter: blur(10px);
-  background: rgba(40, 40, 40, 0.98);
 }
 
 @keyframes fadeIn {
@@ -226,7 +225,7 @@
   border-radius: var(--radius-2);
   text-align: left;
   cursor: pointer;
-  transition: all 0.15s var(--ease-out);
+  transition: background-color 0.15s ease, color 0.15s ease;
   font: var(--font-body);
   font-size: 0.9rem;
   display: flex;
@@ -244,7 +243,6 @@
 
 .dropdownItem:active {
   background: rgba(255, 255, 255, 0.15);
-  transform: scale(0.98);
 }
 
 /* Mobile optimizations */
@@ -283,7 +281,7 @@
   gap: var(--space-3);
   padding: var(--space-2);
   cursor: pointer;
-  transition: all 0.2s var(--ease-out);
+  transition: background-color 0.2s ease;
   position: relative;
   overflow: hidden;
 }
@@ -328,7 +326,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s var(--ease-out);
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
   flex-shrink: 0;
   opacity: 0;
   transform: scale(0.9);
