@@ -323,13 +323,18 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
 
-    // Extract colors and update background
+    // Extract colors and update background with theme color matching
     const coverUrl = track.coverUrl;
     if (coverUrl) {
       try {
         const colors = await extractColorsFromImage(coverUrl);
         const gradient = createGradientCSS(colors);
         setBackgroundGradient(gradient);
+        
+        // Apply theme colors to root for global access
+        document.documentElement.style.setProperty('--theme-primary', colors.primary);
+        document.documentElement.style.setProperty('--theme-secondary', colors.secondary);
+        document.documentElement.style.setProperty('--theme-accent', colors.accent);
       } catch (error) {
         console.error('Failed to extract colors:', error);
       }

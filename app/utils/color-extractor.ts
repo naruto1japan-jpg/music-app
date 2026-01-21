@@ -106,10 +106,22 @@ function getDefaultColors(): DominantColors {
  * Create gradient CSS from dominant colors
  */
 export function createGradientCSS(colors: DominantColors): string {
+  // Enhanced gradient with smoother color transitions for Samsung A14 5G
   return `
-    radial-gradient(ellipse at 20% 30%, ${colors.primary}99 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 70%, ${colors.secondary}99 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, ${colors.accent}66 0%, transparent 70%),
+    radial-gradient(ellipse at 20% 30%, ${colors.primary}bb 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 70%, ${colors.secondary}bb 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, ${colors.accent}88 0%, transparent 65%),
     linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)
   `;
+}
+
+/**
+ * Create dynamic CSS variables for live background theming
+ */
+export function createThemeVariables(colors: DominantColors): Record<string, string> {
+  return {
+    '--theme-primary': colors.primary,
+    '--theme-secondary': colors.secondary,
+    '--theme-accent': colors.accent,
+  };
 }

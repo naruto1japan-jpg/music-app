@@ -27,7 +27,26 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = React.useState("All");
 
   React.useEffect(() => {
-    document.documentElement.style.setProperty('--dynamic-background', backgroundGradient);
+    // Apply dynamic theme colors from album art to background gradients
+    const layoutElement = document.querySelector(`.${styles.layout}`);
+    if (layoutElement && backgroundGradient) {
+      // Extract color values from gradient
+      const gradientMatch = backgroundGradient.match(/rgb\([^)]+\)/g);
+      if (gradientMatch && gradientMatch.length >= 3) {
+        const [primary, secondary, accent] = gradientMatch;
+        
+        // Create dynamic gradients based on extracted colors
+        const dynamicLinear = `linear-gradient(45deg, ${primary} 0%, ${secondary} 30%, ${accent} 60%, ${primary} 100%)`;
+        const dynamicRadial = `
+          radial-gradient(circle at 20% 50%, ${primary}99 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, ${secondary}99 0%, transparent 50%),
+          radial-gradient(circle at 40% 20%, ${accent}66 0%, transparent 50%)
+        `;
+        
+        (layoutElement as HTMLElement).style.setProperty('--dynamic-gradient', dynamicLinear);
+        (layoutElement as HTMLElement).style.setProperty('--dynamic-radial-gradient', dynamicRadial);
+      }
+    }
   }, [backgroundGradient]);
 
   // Get recent plays and featured tracks

@@ -23,23 +23,13 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    45deg,
-    #ff0080 0%,
-    #7928ca 20%,
-    #0070f3 40%,
-    #00d4ff 60%,
-    #7928ca 80%,
-    #ff0080 100%
-  );
+  background: var(--dynamic-gradient, linear-gradient(45deg, #ff0080 0%, #7928ca 20%, #0070f3 40%, #00d4ff 60%, #7928ca 80%, #ff0080 100%));
   background-size: 400% 400%;
-  animation: liquidFlow 15s linear infinite;
-  opacity: 0.3;
+  animation: liquidFlow 15s ease-in-out infinite;
+  opacity: 0.35;
   z-index: 0;
   pointer-events: none;
   will-change: background-position;
-  backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
 .layout::after {
@@ -49,30 +39,15 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(
-    circle at 20% 50%,
-    rgba(255, 0, 128, 0.4) 0%,
-    transparent 50%
-  ),
-  radial-gradient(
-    circle at 80% 80%,
-    rgba(0, 112, 243, 0.4) 0%,
-    transparent 50%
-  ),
-  radial-gradient(
-    circle at 40% 20%,
-    rgba(121, 40, 202, 0.4) 0%,
-    transparent 50%
-  );
+  background: var(--dynamic-radial-gradient, radial-gradient(circle at 20% 50%, rgba(255, 0, 128, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(0, 112, 243, 0.4) 0%, transparent 50%), radial-gradient(circle at 40% 20%, rgba(121, 40, 202, 0.4) 0%, transparent 50%));
   background-size: 200% 200%;
-  animation: liquidPulse 20s linear infinite;
+  animation: liquidPulse 20s ease-in-out infinite;
   z-index: 0;
   pointer-events: none;
   will-change: background-position;
-  backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
+/* Samsung A14 5G optimized animations - 90Hz refresh rate compatible */
 @keyframes liquidFlow {
   0% {
     background-position: 0% 50%;
@@ -88,7 +63,7 @@
 @keyframes liquidPulse {
   0%, 100% {
     background-position: 0% 0%, 100% 100%, 50% 0%;
-    opacity: 0.3;
+    opacity: 0.35;
   }
   25% {
     background-position: 100% 100%, 0% 0%, 100% 50%;
@@ -102,6 +77,12 @@
     background-position: 0% 100%, 100% 0%, 100% 100%;
     opacity: 0.5;
   }
+}
+
+/* Ensure smooth scrolling on Samsung devices */
+.mainContent {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 .menuButton {
