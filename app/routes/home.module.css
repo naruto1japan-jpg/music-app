@@ -33,10 +33,11 @@
     #ff0080 100%
   );
   background-size: 400% 400%;
-  animation: liquidFlow 15s ease infinite;
+  animation: liquidFlow 15s linear infinite;
   opacity: 0.3;
   z-index: 0;
   pointer-events: none;
+  will-change: background-position;
 }
 
 .layout::after {
@@ -62,9 +63,10 @@
     transparent 50%
   );
   background-size: 200% 200%;
-  animation: liquidPulse 20s ease-in-out infinite;
+  animation: liquidPulse 20s linear infinite;
   z-index: 0;
   pointer-events: none;
+  will-change: background-position;
 }
 
 @keyframes liquidFlow {

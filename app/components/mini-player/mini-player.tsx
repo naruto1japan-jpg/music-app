@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronUp, ChevronDown, ListMusic, Car, X, Sparkles } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronUp, ChevronDown, ListMusic, Car, X, Sparkles, Settings } from "lucide-react";
 import { useMusic } from "~/contexts/music-context";
 import { extractColorsFromImage, type DominantColors } from "~/utils/color-extractor";
 import styles from "./mini-player.module.css";
@@ -24,12 +24,15 @@ export function MiniPlayer() {
     isDrivingMode,
     toggleDrivingMode,
     autoQueue,
-    toggleAutoQueue
+    toggleAutoQueue,
+    audioQuality,
+    setAudioQuality
   } = useMusic();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [coverUrl, setCoverUrl] = React.useState<string>('');
   const [dominantColors, setDominantColors] = React.useState<DominantColors | null>(null);
   const [showQueue, setShowQueue] = React.useState(false);
+  const [showSettings, setShowSettings] = React.useState(false);
 
 
   React.useEffect(() => {
@@ -287,6 +290,14 @@ export function MiniPlayer() {
                   >
                     <Car size={20} />
                   </button>
+                  <button 
+                    className={`${styles.toggleButton} ${showSettings ? styles.active : ''}`}
+                    onClick={() => setShowSettings(!showSettings)}
+                    aria-label="Settings"
+                    title="Audio Settings"
+                  >
+                    <Settings size={20} />
+                  </button>
                 </div>
               </div>
 
@@ -315,6 +326,73 @@ export function MiniPlayer() {
                   </button>
                 </div>
               </div>
+
+              {showSettings && (
+                <div className={styles.settingsContainer}>
+                  <div className={styles.settingsHeader}>
+                    <h3 className={styles.settingsTitle}>Audio Quality</h3>
+                  </div>
+                  <div className={styles.qualityOptions}>
+                    <button
+                      className={`${styles.qualityButton} ${audioQuality === 'small' ? styles.activeQuality : ''}`}
+                      onClick={() => setAudioQuality('small')}
+                    >
+                      <div className={styles.qualityInfo}>
+                        <span className={styles.qualityLabel}>Low</span>
+                        <span className={styles.qualityDesc}>144p • Data Saver</span>
+                      </div>
+                    </button>
+                    <button
+                      className={`${styles.qualityButton} ${audioQuality === 'medium' ? styles.activeQuality : ''}`}
+                      onClick={() => setAudioQuality('medium')}
+                    >
+                      <div className={styles.qualityInfo}>
+                        <span className={styles.qualityLabel}>Medium</span>
+                        <span className={styles.qualityDesc}>360p • Balanced</span>
+                      </div>
+                    </button>
+                    <button
+                      className={`${styles.qualityButton} ${audioQuality === 'large' ? styles.activeQuality : ''}`}
+                      onClick={() => setAudioQuality('large')}
+                    >
+                      <div className={styles.qualityInfo}>
+                        <span className={styles.qualityLabel}>High</span>
+                        <span className={styles.qualityDesc}>480p • Good Audio</span>
+                      </div>
+                    </button>
+                    <button
+                      className={`${styles.qualityButton} ${audioQuality === 'hd720' ? styles.activeQuality : ''}`}
+                      onClick={() => setAudioQuality('hd720')}
+                    >
+                      <div className={styles.qualityInfo}>
+                        <span className={styles.qualityLabel}>HD</span>
+                        <span className={styles.qualityDesc}>720p • Premium</span>
+                      </div>
+                    </button>
+                    <button
+                      className={`${styles.qualityButton} ${audioQuality === 'hd1080' ? styles.activeQuality : ''}`}
+                      onClick={() => setAudioQuality('hd1080')}
+                    >
+                      <div className={styles.qualityInfo}>
+                        <span className={styles.qualityLabel}>Full HD</span>
+                        <span className={styles.qualityDesc}>1080p • Best Quality</span>
+                      </div>
+                    </button>
+                    <button
+                      className={`${styles.qualityButton} ${audioQuality === 'highres' ? styles.activeQuality : ''}`}
+                      onClick={() => setAudioQuality('highres')}
+                    >
+                      <div className={styles.qualityInfo}>
+                        <span className={styles.qualityLabel}>Ultra</span>
+                        <span className={styles.qualityDesc}>4K+ • Maximum</span>
+                      </div>
+                    </button>
+                  </div>
+                  <div className={styles.settingNote}>
+                    💡 Higher quality uses more bandwidth. Recommended: HD for best balance.
+                  </div>
+                </div>
+              )}
 
               {showQueue && (
                 <div className={styles.queueContainer}>

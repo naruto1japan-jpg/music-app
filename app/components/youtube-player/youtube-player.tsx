@@ -8,6 +8,7 @@ interface YouTubePlayerProps {
   onStateChange?: (state: number) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onPlayerReady?: (player: any) => void;
+  quality?: 'small' | 'medium' | 'large' | 'hd720' | 'hd1080' | 'highres';
 }
 
 // YouTube IFrame Player API states
@@ -29,7 +30,7 @@ if ('mediaSession' in navigator) {
   mediaSession = navigator.mediaSession;
 }
 
-export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTimeUpdate, onPlayerReady }: YouTubePlayerProps) {
+export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTimeUpdate, onPlayerReady, quality = 'hd720' }: YouTubePlayerProps) {
   const playerRef = React.useRef<any>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const timeUpdateIntervalRef = React.useRef<number | null>(null);
@@ -131,6 +132,7 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
             playsinline: 1, // Critical for mobile devices
             enablejsapi: 1,
             rel: 0,
+            vq: quality, // Video quality parameter
           },
           events: {
             onReady: (event: any) => {
@@ -385,7 +387,7 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
         playerRef.current.loadVideoById({
           videoId: newVideoId,
           startSeconds: 0,
-          suggestedQuality: 'small'
+          suggestedQuality: quality
         });
         playerRef.current.unMute(); // Unmute since user clicked to play
         playerRef.current.playVideo();

@@ -876,6 +876,89 @@
   color: #fff;
 }
 
+.settingsContainer {
+  width: 100%;
+  max-height: 400px;
+  margin-top: var(--space-6);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-4);
+  padding: var(--space-5);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.settingsHeader {
+  margin-bottom: var(--space-4);
+}
+
+.settingsTitle {
+  font: var(--font-heading);
+  color: #fff;
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.qualityOptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.qualityButton {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-3);
+  padding: var(--space-4);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  text-align: left;
+}
+
+.qualityButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(147, 51, 234, 0.4);
+  transform: translateX(4px);
+}
+
+.qualityButton.activeQuality {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(236, 72, 153, 0.2));
+  border-color: rgba(147, 51, 234, 0.6);
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+}
+
+.qualityInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.qualityLabel {
+  font: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.qualityDesc {
+  font: var(--font-caption);
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.settingNote {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  background: rgba(147, 51, 234, 0.1);
+  border-left: 3px solid rgba(147, 51, 234, 0.5);
+  border-radius: var(--radius-2);
+  font: var(--font-caption);
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
 @media (max-width: 768px) {
   .queueBar {
     bottom: 84px;

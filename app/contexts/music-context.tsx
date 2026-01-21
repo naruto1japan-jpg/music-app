@@ -35,6 +35,8 @@ interface MusicContextType {
   lastPlayed: Track[];
   autoQueue: boolean;
   toggleAutoQueue: () => void;
+  audioQuality: 'small' | 'medium' | 'large' | 'hd720' | 'hd1080' | 'highres';
+  setAudioQuality: (quality: 'small' | 'medium' | 'large' | 'hd720' | 'hd1080' | 'highres') => void;
 }
 
 interface SerializedTrack {
@@ -58,6 +60,7 @@ const STORAGE_KEY = 'harmony-flow-tracks';
 const DELETED_TRACKS_KEY = 'harmony-flow-deleted-tracks';
 const LAST_PLAYED_KEY = 'harmony-flow-last-played';
 const AUTO_QUEUE_KEY = 'harmony-flow-auto-queue';
+const AUDIO_QUALITY_KEY = 'harmony-flow-audio-quality';
 const SAVE_KEY = 'last_video_id';
 const TIME_KEY = 'last_timestamp';
 // Pre-populate mock track IDs at module level
@@ -83,6 +86,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [isDrivingMode, setIsDrivingMode] = React.useState(false);
   const [lastPlayed, setLastPlayed] = React.useState<Track[]>([]);
   const [autoQueue, setAutoQueue] = React.useState(true);
+  const [audioQuality, setAudioQualityState] = React.useState<'small' | 'medium' | 'large' | 'hd720' | 'hd1080' | 'highres'>('hd720');
   const genrePreferenceRef = React.useRef<Map<string, number>>(new Map());
 
   // Initialize audio element
@@ -164,6 +168,12 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         const autoQueueData = localStorage.getItem(AUTO_QUEUE_KEY);
         if (autoQueueData !== null) {
           setAutoQueue(JSON.parse(autoQueueData));
+        }
+
+        // Load audio quality preference
+        const qualityData = localStorage.getItem(AUDIO_QUALITY_KEY);
+        if (qualityData !== null) {
+          setAudioQualityState(JSON.parse(qualityData));
         }
 
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -688,6 +698,15 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const setAudioQuality = React.useCallback((quality: 'small' | 'medium' | 'large' | 'hd720' | 'hd1080' | 'highres') => {
+    setAudioQualityState(quality);
+    localStorage.setItem(AUDIO_QUALITY_KEY, JSON.stringify(quality));
+    toast({
+      title: "Audio Quality Updated",
+      description: `Quality set to ${quality.toUpperCase()}`,
+    });
+  }, []);
+
   // Handle regular audio track end
   React.useEffect(() => {
     const audio = audioRef.current;
@@ -791,8 +810,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       lastPlayed,
       autoQueue,
       toggleAutoQueue,
+      audioQuality,
+      setAudioQuality,
     }),
-    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode, lastPlayed, autoQueue, toggleAutoQueue],
+    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode, lastPlayed, autoQueue, toggleAutoQueue, audioQuality, setAudioQuality],
   );
 
   return (
@@ -806,6 +827,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           onTimeUpdate={handleYouTubeTimeUpdate}
           onStateChange={handleYouTubeStateChange}
           onPlayerReady={handleYouTubePlayerReady}
+          quality={audioQuality}
         />
       )}
     </MusicContext.Provider>
