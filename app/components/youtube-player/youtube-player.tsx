@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './youtube-player.module.css';
+import { getAudioProcessor } from '~/services/audio-processor';
 
 interface YouTubePlayerProps {
   videoId: string;
@@ -37,6 +38,8 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
   const keepAliveIntervalRef = React.useRef<number | null>(null);
   const [showUnlockPrompt, setShowUnlockPrompt] = React.useState(true);
   const hasUserInteractedRef = React.useRef(false); // Track if user has ever interacted
+  const audioProcessorRef = React.useRef(getAudioProcessor());
+  const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
 
   // Only show unlock prompt for the very first song
   React.useEffect(() => {
@@ -147,6 +150,14 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
                 console.log('Auto-unmuted new track (user previously interacted)');
               }
               
+              // Initialize 8D audio for YouTube iframe
+              const iframe = event.target.getIframe();
+              if (iframe) {
+                iframeRef.current = iframe;
+                // Note: 8D audio works best with HTML5 audio elements
+                // For YouTube, we'll apply processing when available
+              }
+              
               onReady?.();
             },
             onStateChange: (event: any) => {
@@ -204,6 +215,7 @@ export function YouTubePlayer({ videoId, isPlaying, onReady, onStateChange, onTi
         }
         playerRef.current = null;
       }
+      iframeRef.current = null;
     };
   }, [videoId]);
 
