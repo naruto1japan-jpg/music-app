@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronUp, ChevronDown, ListMusic, Car, X, Sparkles, Settings, Radio, ThumbsUp } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronUp, ChevronDown, ListMusic, Car, X, Sparkles, Settings } from "lucide-react";
 import { useMusic } from "~/contexts/music-context";
 import { extractColorsFromImage, type DominantColors } from "~/utils/color-extractor";
 import styles from "./mini-player.module.css";
@@ -26,23 +26,13 @@ export function MiniPlayer() {
     autoQueue,
     toggleAutoQueue,
     audioQuality,
-    setAudioQuality,
-    is8DEnabled,
-    toggle8D,
-    set8DSpeed,
-    set8DDepth,
-    ytSuggestions,
-    playTrack,
-    addToQueue
+    setAudioQuality
   } = useMusic();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [coverUrl, setCoverUrl] = React.useState<string>('');
   const [dominantColors, setDominantColors] = React.useState<DominantColors | null>(null);
   const [showQueue, setShowQueue] = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
-  const [showSuggestions, setShowSuggestions] = React.useState(false);
-  const [rotationSpeed, setRotationSpeed] = React.useState(8);
-  const [depth, setDepth] = React.useState(0.8);
 
 
   React.useEffect(() => {
@@ -340,73 +330,7 @@ export function MiniPlayer() {
               {showSettings && (
                 <div className={styles.settingsContainer}>
                   <div className={styles.settingsHeader}>
-                    <h3 className={styles.settingsTitle}>Audio Settings</h3>
-                  </div>
-                  
-                  {/* 8D Audio Controls */}
-                  <div className={styles.settingsSection}>
-                    <div className={styles.settingRow}>
-                      <div className={styles.settingInfo}>
-                        <Radio size={18} />
-                        <div>
-                          <span className={styles.settingLabel}>8D Audio</span>
-                          <span className={styles.settingDesc}>Immersive surround sound</span>
-                        </div>
-                      </div>
-                      <button
-                        className={`${styles.toggle8D} ${is8DEnabled ? styles.enabled8D : ''}`}
-                        onClick={toggle8D}
-                        aria-label="Toggle 8D Audio"
-                      >
-                        {is8DEnabled ? 'ON' : 'OFF'}
-                      </button>
-                    </div>
-                    {is8DEnabled && (
-                      <div className={styles.sliderGroup}>
-                        <div className={styles.sliderControl}>
-                          <label className={styles.sliderLabel}>
-                            Rotation Speed: {rotationSpeed}s
-                          </label>
-                          <input
-                            type="range"
-                            min="3"
-                            max="20"
-                            step="1"
-                            value={rotationSpeed}
-                            onChange={(e) => {
-                              const speed = parseInt(e.target.value);
-                              setRotationSpeed(speed);
-                              set8DSpeed(speed);
-                            }}
-                            className={styles.slider}
-                          />
-                        </div>
-                        <div className={styles.sliderControl}>
-                          <label className={styles.sliderLabel}>
-                            Effect Depth: {Math.round(depth * 100)}%
-                          </label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.1"
-                            value={depth}
-                            onChange={(e) => {
-                              const depthVal = parseFloat(e.target.value);
-                              setDepth(depthVal);
-                              set8DDepth(depthVal);
-                            }}
-                            className={styles.slider}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={styles.settingsDivider} />
-                  
-                  <div className={styles.settingsHeader}>
-                    <h3 className={styles.settingsTitle}>Video Quality</h3>
+                    <h3 className={styles.settingsTitle}>Audio Quality</h3>
                   </div>
                   <div className={styles.qualityOptions}>
                     <button
@@ -474,73 +398,17 @@ export function MiniPlayer() {
                 <div className={styles.queueContainer}>
                   <div className={styles.queueHeader}>
                     <h3 className={styles.queueTitle}>Queue</h3>
-                    <div className={styles.queueActions}>
-                      {ytSuggestions.length > 0 && (
-                        <button 
-                          className={`${styles.suggestionsButton} ${showSuggestions ? styles.active : ''}`}
-                          onClick={() => setShowSuggestions(!showSuggestions)}
-                          aria-label="YouTube suggestions"
-                        >
-                          <ThumbsUp size={16} />
-                          Suggestions ({ytSuggestions.length})
-                        </button>
-                      )}
-                      {queue.length > 0 && (
-                        <button 
-                          className={styles.clearButton}
-                          onClick={clearQueue}
-                          aria-label="Clear queue"
-                        >
-                          Clear All
-                        </button>
-                      )}
-                    </div>
+                    {queue.length > 0 && (
+                      <button 
+                        className={styles.clearButton}
+                        onClick={clearQueue}
+                        aria-label="Clear queue"
+                      >
+                        Clear All
+                      </button>
+                    )}
                   </div>
-                  
-                  {/* YouTube Suggestions */}
-                  {showSuggestions && ytSuggestions.length > 0 && (
-                    <div className={styles.suggestionsSection}>
-                      <p className={styles.suggestionsLabel}>Related from YouTube</p>
-                      <div className={styles.suggestionsList}>
-                        {ytSuggestions.map((track, index) => (
-                          <div key={`${track.id}-${index}`} className={styles.suggestionItem}>
-                            <img 
-                              src={track.coverUrl} 
-                              alt={`${track.title} cover`} 
-                              className={styles.suggestionCover}
-                            />
-                            <div className={styles.suggestionTrackInfo}>
-                              <p className={styles.suggestionTrackTitle}>{track.title}</p>
-                              <p className={styles.suggestionTrackArtist}>{track.artist}</p>
-                            </div>
-                            <div className={styles.suggestionActions}>
-                              <button 
-                                className={styles.suggestionPlayButton}
-                                onClick={() => {
-                                  playTrack(track);
-                                  setShowSuggestions(false);
-                                }}
-                                aria-label="Play now"
-                                title="Play now"
-                              >
-                                <Play size={14} fill="currentColor" />
-                              </button>
-                              <button 
-                                className={styles.suggestionAddButton}
-                                onClick={() => addToQueue(track)}
-                                aria-label="Add to queue"
-                                title="Add to queue"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {queue.length === 0 && !showSuggestions ? (
+                  {queue.length === 0 ? (
                     <p className={styles.emptyQueue}>No tracks in queue</p>
                   ) : (
                     <div className={styles.queueList}>

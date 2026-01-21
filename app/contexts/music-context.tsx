@@ -4,8 +4,6 @@ import { mockTracks } from "~/data/music";
 import { extractColorsFromImage, createGradientCSS, type DominantColors } from "~/utils/color-extractor";
 import { YouTubePlayer } from "~/components/youtube-player/youtube-player";
 import { toast } from "~/hooks/use-toast";
-import { getAudioProcessor, save8DSettings } from "~/services/audio-processor";
-import { getRelatedVideos, suggestionsToTracks } from "~/services/youtube-suggestions";
 
 interface MusicContextType {
   currentTrack: Track | null;
@@ -39,12 +37,6 @@ interface MusicContextType {
   toggleAutoQueue: () => void;
   audioQuality: 'small' | 'medium' | 'large' | 'hd720' | 'hd1080' | 'highres';
   setAudioQuality: (quality: 'small' | 'medium' | 'large' | 'hd720' | 'hd1080' | 'highres') => void;
-  is8DEnabled: boolean;
-  toggle8D: () => void;
-  set8DSpeed: (speed: number) => void;
-  set8DDepth: (depth: number) => void;
-  ytSuggestions: Track[];
-  loadYTSuggestions: () => void;
 }
 
 interface SerializedTrack {
@@ -96,9 +88,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [autoQueue, setAutoQueue] = React.useState(true);
   const [audioQuality, setAudioQualityState] = React.useState<'small' | 'medium' | 'large' | 'hd720' | 'hd1080' | 'highres'>('hd720');
   const genrePreferenceRef = React.useRef<Map<string, number>>(new Map());
-  const [is8DEnabled, setIs8DEnabled] = React.useState(false);
-  const [ytSuggestions, setYtSuggestions] = React.useState<Track[]>([]);
-  const audioProcessorRef = React.useRef(getAudioProcessor());
 
   // Initialize audio element
   React.useEffect(() => {
@@ -578,24 +567,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     if (queue.length > 0) {
       const nextTrack = queue[0];
       console.log('Playing next song from queue:', nextTrack.title);
-      
-      // Check if next track is already the current track (prevent same song playing)
-      if (currentTrack && nextTrack.id === currentTrack.id) {
-        console.log('Next track is same as current, skipping to next in queue');
-        if (queue.length > 1) {
-          setQueue(prev => prev.slice(1));
-          const actualNext = queue[1];
-          setQueue(prev => prev.slice(1));
-          playTrack(actualNext);
-        } else {
-          // Only one song in queue and it's current, clear queue and move on
-          setQueue([]);
-          // Fall through to auto-queue or sequential play
-        }
-      } else {
-        setQueue(prev => prev.slice(1)); // Remove the first song from queue
-        playTrack(nextTrack);
-      }
+      setQueue(prev => prev.slice(1)); // Remove the first song from queue
+      playTrack(nextTrack);
       
       // SPOTIFY MAGIC: If queue is running low (1 song left), auto-generate more!
       if (queue.length <= 1 && autoQueue) {
@@ -739,70 +712,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  // 8D Audio Controls
-  const toggle8D = React.useCallback(() => {
-    const processor = audioProcessorRef.current;
-    const newState = processor.toggle();
-    setIs8DEnabled(newState);
-    save8DSettings(newState);
-    
-    toast({
-      title: newState ? "8D Audio Enabled" : "8D Audio Disabled",
-      description: newState ? "Experience immersive surround sound" : "Back to stereo audio",
-    });
-  }, []);
-
-  const set8DSpeed = React.useCallback((speed: number) => {
-    audioProcessorRef.current.setRotationSpeed(speed);
-    save8DSettings(is8DEnabled, speed);
-  }, [is8DEnabled]);
-
-  const set8DDepth = React.useCallback((depth: number) => {
-    audioProcessorRef.current.setDepth(depth);
-    save8DSettings(is8DEnabled, undefined, depth);
-  }, [is8DEnabled]);
-
-  // Load YouTube suggestions based on current track
-  const loadYTSuggestions = React.useCallback(async () => {
-    if (!currentTrack?.youtubeVideoId) {
-      console.log('No YouTube video ID for suggestions');
-      return;
-    }
-
-    // Get API key from environment
-    const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY_1;
-    if (!apiKey) {
-      console.warn('YouTube API key not configured');
-      return;
-    }
-
-    try {
-      const suggestions = await getRelatedVideos(currentTrack.youtubeVideoId, apiKey);
-      const suggestionTracks = suggestionsToTracks(suggestions);
-      setYtSuggestions(suggestionTracks);
-      console.log('Loaded', suggestionTracks.length, 'YouTube suggestions');
-    } catch (error) {
-      console.error('Failed to load YouTube suggestions:', error);
-    }
-  }, [currentTrack]);
-
-  // Initialize 8D audio processor when audio element is ready
-  React.useEffect(() => {
-    if (audioRef.current && !youtubeVideoId) {
-      audioProcessorRef.current.initialize(audioRef.current);
-      console.log('8D Audio processor initialized for audio element');
-    }
-  }, [youtubeVideoId]);
-
-  // Load YT suggestions when track changes and it's a YouTube track
-  React.useEffect(() => {
-    if (currentTrack?.youtubeVideoId) {
-      loadYTSuggestions();
-    } else {
-      setYtSuggestions([]);
-    }
-  }, [currentTrack, loadYTSuggestions]);
-
   // Handle regular audio track end
   React.useEffect(() => {
     const audio = audioRef.current;
@@ -908,14 +817,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       toggleAutoQueue,
       audioQuality,
       setAudioQuality,
-      is8DEnabled,
-      toggle8D,
-      set8DSpeed,
-      set8DDepth,
-      ytSuggestions,
-      loadYTSuggestions,
     }),
-    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode, lastPlayed, autoQueue, toggleAutoQueue, audioQuality, setAudioQuality, is8DEnabled, toggle8D, set8DSpeed, set8DDepth, ytSuggestions, loadYTSuggestions],
+    [currentTrack, isPlaying, playTrack, pauseTrack, resumeTrack, togglePlayPause, nextTrack, previousTrack, toggleRepeat, toggleShuffle, isRepeat, isShuffle, backgroundGradient, tracks, addTrack, deleteTrack, currentTime, duration, seek, queue, addToQueue, removeFromQueue, clearQueue, isDrivingMode, toggleDrivingMode, lastPlayed, autoQueue, toggleAutoQueue, audioQuality, setAudioQuality],
   );
 
   return (
