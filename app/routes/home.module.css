@@ -38,6 +38,8 @@
   z-index: 0;
   pointer-events: none;
   will-change: background-position;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .layout::after {
@@ -67,6 +69,8 @@
   z-index: 0;
   pointer-events: none;
   will-change: background-position;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 @keyframes liquidFlow {

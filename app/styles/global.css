@@ -6,14 +6,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  perspective: 1000;
-  -webkit-perspective: 1000;
-  transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-}
+
 
 body {
   margin: 0;
