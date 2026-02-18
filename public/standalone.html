@@ -266,6 +266,9 @@
       position: fixed;
       top: -9999px;
       left: -9999px;
+      width: 640px;
+      height: 360px;
+      pointer-events: none;
     }
 
     .loading {
@@ -433,14 +436,16 @@
     // YouTube API initialization
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('ytPlayer', {
-        height: '0',
-        width: '0',
+        height: '360',
+        width: '640',
         videoId: musicLibrary[0].id,
         playerVars: {
           autoplay: 0,
           controls: 0,
           modestbranding: 1,
-          rel: 0
+          rel: 0,
+          enablejsapi: 1,
+          origin: window.location.origin
         },
         events: {
           onReady: onPlayerReady,
@@ -449,12 +454,15 @@
       });
     }
 
-    function onPlayerReady() {
+    function onPlayerReady(event) {
+      console.log('YouTube player ready');
       updateUI();
       startProgressTracking();
     }
 
     function onPlayerStateChange(event) {
+      console.log('Player state:', event.data);
+      
       if (event.data === YT.PlayerState.ENDED) {
         nextTrack();
       } else if (event.data === YT.PlayerState.PLAYING) {
@@ -463,6 +471,10 @@
       } else if (event.data === YT.PlayerState.PAUSED) {
         isPlaying = false;
         updatePlayPauseButton();
+      } else if (event.data === YT.PlayerState.BUFFERING) {
+        console.log('Buffering...');
+      } else if (event.data === YT.PlayerState.CUED) {
+        console.log('Video cued');
       }
     }
 
@@ -473,21 +485,38 @@
       const track = musicLibrary[currentTrackIndex];
       
       if (player && player.loadVideoById) {
-        player.loadVideoById(track.id);
-        player.playVideo();
+        player.loadVideoById({
+          videoId: track.id,
+          startSeconds: 0,
+          suggestedQuality: 'small'
+        });
+        setTimeout(() => {
+          player.playVideo();
+        }, 300);
         isPlaying = true;
         updateUI();
+      } else {
+        console.error('Player not ready');
       }
     }
 
     function togglePlayPause() {
-      if (!player || !player.getPlayerState) return;
+      if (!player || !player.getPlayerState) {
+        console.error('Player not ready');
+        return;
+      }
       
-      if (isPlaying) {
+      const state = player.getPlayerState();
+      
+      if (state === YT.PlayerState.PLAYING) {
         player.pauseVideo();
+        isPlaying = false;
       } else {
         player.playVideo();
+        isPlaying = true;
       }
+      
+      updatePlayPauseButton();
     }
 
     function nextTrack() {
