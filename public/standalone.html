@@ -440,11 +440,16 @@
         width: '640',
         videoId: musicLibrary[0].id,
         playerVars: {
-          autoplay: 0,
+          autoplay: 1,
+          mute: 1, // Start muted for autoplay policy
           controls: 0,
+          disablekb: 1,
+          fs: 0,
           modestbranding: 1,
-          rel: 0,
+          playsinline: 1,
           enablejsapi: 1,
+          rel: 0,
+          vq: 'small',
           origin: window.location.origin
         },
         events: {
@@ -456,6 +461,9 @@
 
     function onPlayerReady(event) {
       console.log('YouTube player ready');
+      // Unmute after player is ready
+      event.target.unMute();
+      event.target.setVolume(100);
       updateUI();
       startProgressTracking();
     }
@@ -473,6 +481,17 @@
         updatePlayPauseButton();
       } else if (event.data === YT.PlayerState.BUFFERING) {
         console.log('Buffering...');
+        // Retry playback if stuck in buffering for too long
+        setTimeout(() => {
+          if (player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.BUFFERING && isPlaying) {
+            console.log('Stuck in buffering, attempting recovery...');
+            try {
+              player.playVideo();
+            } catch (error) {
+              console.error('Recovery failed:', error);
+            }
+          }
+        }, 3000);
       } else if (event.data === YT.PlayerState.CUED) {
         console.log('Video cued');
       }
@@ -485,16 +504,29 @@
       const track = musicLibrary[currentTrackIndex];
       
       if (player && player.loadVideoById) {
-        player.loadVideoById({
-          videoId: track.id,
-          startSeconds: 0,
-          suggestedQuality: 'small'
-        });
-        setTimeout(() => {
-          player.playVideo();
-        }, 300);
-        isPlaying = true;
-        updateUI();
+        try {
+          player.loadVideoById({
+            videoId: track.id,
+            startSeconds: 0,
+            suggestedQuality: 'small'
+          });
+          
+          // Unmute and play immediately
+          player.unMute();
+          player.setVolume(100);
+          
+          // Play with a small delay to ensure video is loaded
+          setTimeout(() => {
+            player.playVideo();
+          }, 100);
+          
+          isPlaying = true;
+          updateUI();
+        } catch (error) {
+          console.error('Error playing track:', error);
+          // Reload on critical error
+          window.location.reload();
+        }
       } else {
         console.error('Player not ready');
       }
@@ -506,17 +538,24 @@
         return;
       }
       
-      const state = player.getPlayerState();
-      
-      if (state === YT.PlayerState.PLAYING) {
-        player.pauseVideo();
-        isPlaying = false;
-      } else {
-        player.playVideo();
-        isPlaying = true;
+      try {
+        const state = player.getPlayerState();
+        
+        if (state === YT.PlayerState.PLAYING) {
+          player.pauseVideo();
+          isPlaying = false;
+        } else {
+          // Ensure unmuted before playing
+          player.unMute();
+          player.setVolume(100);
+          player.playVideo();
+          isPlaying = true;
+        }
+        
+        updatePlayPauseButton();
+      } catch (error) {
+        console.error('Error toggling play/pause:', error);
       }
-      
-      updatePlayPauseButton();
     }
 
     function nextTrack() {
