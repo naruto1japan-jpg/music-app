@@ -24,7 +24,7 @@ html {
   --color-neutral-12: var(--slate-12);
   --color-neutral-contrast: var(--slate-contrast);
 
-  /* Accent colors - Vibrant cyan for interactions */
+  /* Accent colors - Neon cyan for cosmic theme */
   --color-accent-1: var(--cyan-1);
   --color-accent-2: var(--cyan-2);
   --color-accent-3: var(--cyan-3);
@@ -69,20 +69,20 @@ html {
   --color-success-12: var(--green-12);
   --color-success-contrast: var(--green-contrast);
 
-  /* Brand color - Violet for identity */
-  --color-brand-1: var(--violet-1);
-  --color-brand-2: var(--violet-2);
-  --color-brand-3: var(--violet-3);
-  --color-brand-4: var(--violet-4);
-  --color-brand-5: var(--violet-5);
-  --color-brand-6: var(--violet-6);
-  --color-brand-7: var(--violet-7);
-  --color-brand-8: var(--violet-8);
-  --color-brand-9: var(--violet-9);
-  --color-brand-10: var(--violet-10);
-  --color-brand-11: var(--violet-11);
-  --color-brand-12: var(--violet-12);
-  --color-brand-contrast: var(--violet-contrast);
+  /* Brand color - Purple for cosmic identity */
+  --color-brand-1: var(--purple-1);
+  --color-brand-2: var(--purple-2);
+  --color-brand-3: var(--purple-3);
+  --color-brand-4: var(--purple-4);
+  --color-brand-5: var(--purple-5);
+  --color-brand-6: var(--purple-6);
+  --color-brand-7: var(--purple-7);
+  --color-brand-8: var(--purple-8);
+  --color-brand-9: var(--purple-9);
+  --color-brand-10: var(--purple-10);
+  --color-brand-11: var(--purple-11);
+  --color-brand-12: var(--purple-12);
+  --color-brand-contrast: var(--purple-contrast);
 
   /* Performance optimization variables */
   --optimized-duration: 300ms;
@@ -91,4 +91,14 @@ html {
   --optimized-blur: blur(20px);
   --optimized-shadow: var(--shadow-3);
   --optimized-transform: translateZ(0);
+
+  /* Cosmic theme variables */
+  --cosmic-purple: #8e4ec6;
+  --cosmic-blue: #0070f3;
+  --cosmic-cyan: #00d4ff;
+  --cosmic-pink: #ff0080;
+  --cosmic-violet: #7928ca;
+  --neon-glow: 0 0 20px currentColor;
+  --glassmorphism-bg: rgba(255, 255, 255, 0.05);
+  --glassmorphism-border: rgba(255, 255, 255, 0.1);
 }

@@ -5,6 +5,7 @@ import { Home as HomeIcon, Search, Settings, Menu, X, User } from "lucide-react"
 
 import { MiniPlayer } from "~/components/mini-player/mini-player";
 import { MusicCard } from "~/components/music-card/music-card";
+import { CosmicParticles } from "~/components/cosmic-particles/cosmic-particles";
 import { useMusic } from "~/contexts/music-context";
 import { mockTracks } from "~/data/music";
 import styles from "./home.module.css";
@@ -56,6 +57,7 @@ export default function Home() {
 
   return (
     <div className={styles.layout}>
+      <CosmicParticles />
       <button 
         className={styles.menuButton} 
         onClick={() => setSidebarOpen(!sidebarOpen)}

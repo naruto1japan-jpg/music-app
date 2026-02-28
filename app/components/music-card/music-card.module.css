@@ -1,17 +1,39 @@
 .card {
-  background: #181818;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(142, 78, 198, 0.2);
+  border-radius: 16px;
   overflow: hidden;
-  transition: background-color 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   flex-direction: column;
   height: 100%;
   padding: var(--space-3);
   cursor: pointer;
+  position: relative;
+  animation: floatIn 0.6s ease-out;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(142, 78, 198, 0.1), rgba(0, 212, 255, 0.1));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+  border-radius: 16px;
 }
 
 .card:hover {
-  background: #282828;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--cosmic-cyan);
+  box-shadow: 0 8px 32px rgba(0, 212, 255, 0.4), 0 0 40px rgba(142, 78, 198, 0.2);
+  transform: translateY(-8px) scale(1.02);
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 .coverContainer {
@@ -19,17 +41,24 @@
   width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
-  background: #282828;
+  background: linear-gradient(135deg, rgba(142, 78, 198, 0.2), rgba(0, 212, 255, 0.2));
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: var(--space-3);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(142, 78, 198, 0.3);
 }
 
 .cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease, filter 0.4s ease;
+}
+
+.card:hover .cover {
+  transform: scale(1.1) rotate(2deg);
+  filter: brightness(1.1);
 }
 
 .playOverlay {
@@ -37,34 +66,45 @@
 }
 
 .playButton {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-round);
-  background: #1db954;
-  color: #000;
-  border: none;
+  background: linear-gradient(135deg, var(--cosmic-cyan), var(--cosmic-violet));
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: absolute;
   bottom: var(--space-4);
   right: var(--space-4);
   opacity: 0;
-  transform: translateY(8px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  transform: translateY(20px) scale(0.8);
+  box-shadow: 0 12px 30px rgba(0, 212, 255, 0.4);
   z-index: 2;
 }
 
 .card:hover .playButton {
   opacity: 1;
-  transform: translateY(-8px);
+  transform: translateY(-8px) scale(1);
 }
 
 .playButton:hover {
-  background: #1ed760;
-  transform: translateY(-8px) scale(1.05);
+  background: linear-gradient(135deg, var(--cosmic-violet), var(--cosmic-pink));
+  transform: translateY(-12px) scale(1.15);
+  box-shadow: 0 16px 40px rgba(255, 0, 128, 0.6);
+  animation: neonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 16px 40px rgba(255, 0, 128, 0.6);
+  }
+  50% {
+    box-shadow: 0 20px 50px rgba(0, 212, 255, 0.8);
+  }
 }
 
 .content {
@@ -89,12 +129,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .artist {
   font: var(--font-body);
   font-size: 0.875rem;
-  color: #b3b3b3;
+  color: rgba(255, 255, 255, 0.6);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -145,19 +186,21 @@
   width: 32px;
   height: 32px;
   border-radius: var(--radius-2);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(142, 78, 198, 0.2);
   color: rgba(255, 255, 255, 0.7);
-  border: none;
+  border: 1px solid rgba(142, 78, 198, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .queueButton:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(142, 78, 198, 0.4), rgba(0, 212, 255, 0.4));
   color: #fff;
+  border-color: var(--cosmic-cyan);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
 }
 
 .menuContainer {
@@ -168,47 +211,61 @@
   width: 32px;
   height: 32px;
   border-radius: var(--radius-2);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(142, 78, 198, 0.2);
   color: rgba(255, 255, 255, 0.7);
-  border: none;
+  border: 1px solid rgba(142, 78, 198, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.3s ease;
   position: relative;
   z-index: 1;
   -webkit-tap-highlight-color: transparent;
 }
 
 .menuButton:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(142, 78, 198, 0.4), rgba(255, 0, 128, 0.4));
   color: #fff;
+  border-color: var(--cosmic-pink);
+  box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
 }
 
 .menuButton:active,
 .menuButton[data-active="true"] {
-  background: rgba(30, 215, 96, 0.2);
-  color: #1db954;
+  background: linear-gradient(135deg, var(--cosmic-violet), var(--cosmic-cyan));
+  color: #fff;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
 }
 
 .dropdown {
   position: fixed;
-  background: rgba(40, 40, 40, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-3);
-  padding: var(--space-2);
+  background: rgba(10, 0, 21, 0.95);
+  backdrop-filter: blur(30px) saturate(150%);
+  border: 1px solid rgba(142, 78, 198, 0.4);
+  border-radius: var(--radius-4);
+  padding: var(--space-3);
   min-width: 180px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(142, 78, 198, 0.3);
   z-index: 9999;
-  animation: fadeIn 0.15s ease;
-  backdrop-filter: blur(10px);
+  animation: dropdownSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes fadeIn {
+@keyframes dropdownSlide {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -225,24 +282,39 @@
   border-radius: var(--radius-2);
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: all 0.3s ease;
   font: var(--font-body);
   font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-height: 40px;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  position: relative;
+}
+
+.dropdownItem::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(142, 78, 198, 0.2), rgba(0, 212, 255, 0.2));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: var(--radius-2);
 }
 
 .dropdownItem:hover {
-  background: rgba(255, 255, 255, 0.1);
   color: #fff;
+  transform: translateX(4px);
+}
+
+.dropdownItem:hover::before {
+  opacity: 1;
 }
 
 .dropdownItem:active {
-  background: rgba(255, 255, 255, 0.15);
+  transform: scale(0.98);
 }
 
 /* Mobile optimizations */
@@ -274,29 +346,53 @@
 
 /* Compact Card Variant */
 .compactCard {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-2);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(142, 78, 198, 0.2);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
   overflow: hidden;
 }
 
+.compactCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(142, 78, 198, 0.15), rgba(0, 212, 255, 0.15));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
 .compactCard:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--cosmic-cyan);
+  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+  transform: translateX(4px);
+}
+
+.compactCard:hover::before {
+  opacity: 1;
 }
 
 .compactCover {
   width: 64px;
   height: 64px;
-  border-radius: var(--radius-2);
+  border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(142, 78, 198, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.compactCard:hover .compactCover {
+  transform: scale(1.05);
 }
 
 .compactInfo {
@@ -313,24 +409,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .compactPlayButton {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-round);
-  background: #1db954;
-  color: #000;
-  border: none;
+  background: linear-gradient(135deg, var(--cosmic-cyan), var(--cosmic-violet));
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   flex-shrink: 0;
   opacity: 0;
-  transform: scale(0.9);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transform: scale(0.8);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
 }
 
 .compactCard:hover .compactPlayButton {
@@ -339,6 +436,7 @@
 }
 
 .compactPlayButton:hover {
-  background: #1ed760;
-  transform: scale(1.05);
+  background: linear-gradient(135deg, var(--cosmic-violet), var(--cosmic-pink));
+  transform: scale(1.1);
+  box-shadow: 0 8px 30px rgba(255, 0, 128, 0.6);
 }
